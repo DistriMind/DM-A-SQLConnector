@@ -1,6 +1,6 @@
 require 'sqldroid/version'
-require "sqldroid/sqldroid-#{SQLDroid::MAVEN_VERSION}.jar"
+require "sqldroid/sqldroid-#{DM-A-SQLConnector::MAVEN_VERSION}.jar"
 
-module SQLDroid
+module DM-A-SQLConnector
   # No code, yet.
 end

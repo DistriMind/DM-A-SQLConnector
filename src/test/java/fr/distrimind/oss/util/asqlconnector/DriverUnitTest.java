@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class DriverUnitTest {
 
-  /** Going to use SQLDroid JDBC Driver */
+  /** Going to use DM-A-SQLConnector JDBC Driver */
   protected String driverName = "fr.distrimind.oss.util.asqlconnector.SQLDroidDriver";
   
   /** Common prefix for creating JDBC URL */ 

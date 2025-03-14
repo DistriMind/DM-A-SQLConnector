@@ -334,7 +334,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public String getDriverName() throws SQLException {
-        return "SQLDroid";
+        return "DM-A-SQLConnector";
     }
 
     @Override

@@ -5,7 +5,7 @@ require 'sqldroid/version'
 module Jdbc
   module SQLite3
     def self.driver_jar
-      "sqldroid/sqldroid-#{SQLDroid::MAVEN_VERSION}.jar"
+      "sqldroid/sqldroid-#{DM-A-SQLConnector::MAVEN_VERSION}.jar"
     end
 
     def self.load_driver(method = :load)

@@ -744,7 +744,7 @@ public class SQLDroidPreparedStatement implements PreparedStatement {
   @Override
   public void setBinaryStream(int parameterIndex, InputStream inputStream, long length) throws SQLException {
     if ( length > Integer.MAX_VALUE ) {
-      throw new SQLException ("SQLDroid does not allow input stream data greater than " + Integer.MAX_VALUE );
+      throw new SQLException ("DM-A-SQLConnector does not allow input stream data greater than " + Integer.MAX_VALUE );
     }
     setBinaryStream(parameterIndex, inputStream, (int)length);
   }

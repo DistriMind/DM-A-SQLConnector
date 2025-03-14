@@ -426,7 +426,7 @@ public class SQLDroidConnection implements Connection {
     @Override
     public void setHoldability(int holdability) throws SQLException {
       if (holdability != ResultSet.CLOSE_CURSORS_AT_COMMIT)
-        throw new SQLException("SQLDroid only supports CLOSE_CURSORS_AT_COMMIT");
+        throw new SQLException("DM-A-SQLConnector only supports CLOSE_CURSORS_AT_COMMIT");
     }
 
     @Override
@@ -451,7 +451,7 @@ public class SQLDroidConnection implements Connection {
     public void setTransactionIsolation(int level) throws SQLException {
         // TODO: Xerial implements this with PRAGMA read_uncommitted
         if (level != TRANSACTION_SERIALIZABLE) {
-          throw new SQLException("SQLDroid supports only TRANSACTION_SERIALIZABLE.");
+          throw new SQLException("DM-A-SQLConnector supports only TRANSACTION_SERIALIZABLE.");
         }
         transactionIsolation = level;
     }

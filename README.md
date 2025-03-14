@@ -1,12 +1,12 @@
 [![CodeQL](https://github.com/DistriMind/DM-A-SQLConnector/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/DistriMind/DM-A-SQLConnector/actions/workflows/codeql-analysis.yml)
 
-# SQLDroid
+# DM-A-SQLConnector
 
-SQLDroid is a JDBC driver for Android's sqlite database (android.database.sqlite.SQLiteDatabase) originally conceived by Kristian Lein-Mathisen. See http://sqldroid.org/.
+DM-A-SQLConnector is a JDBC driver for Android's sqlite database (android.database.sqlite.SQLiteDatabase) originally conceived by Kristian Lein-Mathisen. See http://sqldroid.org/.
 
-SQLDroid lets you access your app's database through JDBC. Android ships with the necessary interfaces needed to use JDBC drivers, but it does not officially ship with a driver for its built-in SQLite database engine.  When porting code from other projects, you can conveniently replace the JDBC url to jdbc:sqlite to access an SQLite database on Android.
+DM-A-SQLConnector lets you access your app's database through JDBC. Android ships with the necessary interfaces needed to use JDBC drivers, but it does not officially ship with a driver for its built-in SQLite database engine.  When porting code from other projects, you can conveniently replace the JDBC url to jdbc:sqlite to access an SQLite database on Android.
 
-The SQLDroid JAR with the JDBC driver for Android is 33KB.  We also offer a RubyGem "sqldroid" for use with [Ruboto](http://ruboto.org/).
+The DM-A-SQLConnector JAR with the JDBC driver for Android is 33KB.  We also offer a RubyGem "sqldroid" for use with [Ruboto](http://ruboto.org/).
 
 # How to use it ?
 
@@ -74,7 +74,7 @@ To know what last version has been uploaded, please refer to versions available 
 
 ## Usage
 
-Here is a minimal example of an Android Activity implemented in Java with SQLDroid.
+Here is a minimal example of an Android Activity implemented in Java with DM-A-SQLConnector.
 
 ```java
 import java.sql.DriverManager;
@@ -116,13 +116,13 @@ public class MainActivity extends AppCompatActivity {
 }
 ```
 
-You can find an example of how to use SQLDroid with ActiveRecord on Ruboto here:
+You can find an example of how to use DM-A-SQLConnector with ActiveRecord on Ruboto here:
 
 https://github.com/ruboto/ruboto/wiki/Tutorial%3A-Using-an-SQLite-database-with-ActiveRecord
 
 ## Debug output
 
-You can set the SQLDroid log output level like this
+You can set the DM-A-SQLConnector log output level like this
 
     fr.distrimind.oss.util.asqlconnector.Log.LEVEL = android.util.Log.VERBOSE;
 

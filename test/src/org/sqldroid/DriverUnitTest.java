@@ -21,7 +21,7 @@ import junit.framework.TestSuite;
 
 public class DriverUnitTest extends TestCase {
 
-  /** Going to use SQLDroid JDBC Driver */
+  /** Going to use DM-A-SQLConnector JDBC Driver */
   protected String driverName = "fr.distrimind.oss.util.asqlconnector.SQLDroidDriver";
   
   /** Common prefix for creating JDBC URL */ 
@@ -733,7 +733,7 @@ public class DriverUnitTest extends TestCase {
 }
 
   public static Test suite () {
-    TestSuite suite =  new TestSuite("SQLDroid Tests");
+    TestSuite suite =  new TestSuite("DM-A-SQLConnector Tests");
     suite.addTest(new DriverUnitTest("testAutoCommit"));
     suite.addTest(new DriverUnitTest("testBlob"));
     suite.addTest(new DriverUnitTest("testMetaData"));

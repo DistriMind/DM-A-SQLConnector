@@ -1,4 +1,4 @@
-module SQLDroid
+module DM-A-SQLConnector
   pom_locations = [
       File.expand_path('../META-INF/fr.distrimind.oss.util.asqlconnector/sqldroid/pom.xml', __dir__),
       File.expand_path('../../pom.xml', __dir__),

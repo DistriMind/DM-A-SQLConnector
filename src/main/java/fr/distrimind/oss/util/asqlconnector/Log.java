@@ -37,7 +37,7 @@ public class Log {
 
     public static class AndroidLog implements ILog {
 
-        private static final String TAG = "SQLDroid";
+        private static final String TAG = "DM-A-SQLConnector";
 
         @Override
         public void d(String message) {
