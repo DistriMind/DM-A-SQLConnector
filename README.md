@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/SQLDroid/SQLDroid.svg?branch=master)](https://travis-ci.org/SQLDroid/SQLDroid)
 
+[![CodeQL](https://github.com/DistriMind/DM-A-SQLConnector/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/DistriMind/DM-A-SQLConnector/actions/workflows/codeql-analysis.yml)
+
 # SQLDroid
 
 SQLDroid is a JDBC driver for Android's sqlite database (android.database.sqlite.SQLiteDatabase) originally conceived by Kristian Lein-Mathisen. See http://sqldroid.org/.
