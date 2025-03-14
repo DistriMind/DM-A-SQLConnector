@@ -23,22 +23,22 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-public class SQLDroidConnection implements Connection {
+public class ASQLConnectorConnection implements Connection {
     /**
     * A map to a single instance of a SQLiteDatabase per DB.
     */
-    private static final Map<String, SQLiteDatabase> dbMap =
+    private static final Map<String, ASQLConnectorDatabase> dbMap =
 			new HashMap<>();
 
     /**
     * A map from a connection to a SQLiteDatabase instance.
     * Used to track the use of each instance, and close the database when last conneciton is closed.
     */
-    private static final Map<SQLDroidConnection, SQLiteDatabase> clientMap =
-            new HashMap<SQLDroidConnection, SQLiteDatabase>();
+    private static final Map<ASQLConnectorConnection, ASQLConnectorDatabase> clientMap =
+            new HashMap<ASQLConnectorConnection, ASQLConnectorDatabase>();
 
     /** The Android sqlitedb. */
-    private SQLiteDatabase sqlitedb;
+    private ASQLConnectorDatabase sqlitedb;
 
     private boolean autoCommit = true;
 
@@ -71,21 +71,21 @@ public class SQLDroidConnection implements Connection {
      *  "jdbc:sqlite:/data/data/fr.distrimind.oss.util.asqlconnector.examples/databases/sqlite.db"
      * @param info Properties object with options.  Supported options are "timeout", "retry", and "shared".
      */
-    public SQLDroidConnection(String url, Properties info) throws SQLException {
-        Log.v("SQLDroidConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+    public ASQLConnectorConnection(String url, Properties info) throws SQLException {
+        Log.v("ASQLConnectorConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
         Log.v("New sqlite jdbc from url '" + url + "', " + "'" + info + "'");
 
         this.url = url;
         // Make a filename from url
         String dbQname;
-        if(url.startsWith(SQLDroidDriver.xerialPrefix)) {
-            dbQname = url.substring(SQLDroidDriver.xerialPrefix.length());
+        if(url.startsWith(ASQLConnectorDriver.xerialPrefix)) {
+            dbQname = url.substring(ASQLConnectorDriver.xerialPrefix.length());
         } else {
             // there does not seem to be any possibility of error handling.
-            // So we could check that the url starts with SQLDroidDriver.sqldroidPrefix
+            // So we could check that the url starts with ASQLConnectorDriver.aSQLConnectorPrefix
             // but if it doesn't there's nothing we can do (no Exception is specified)
             // so it has to be assumed that the URL is valid when passed to this method.
-            dbQname = url.substring(SQLDroidDriver.sqldroidPrefix.length());
+            dbQname = url.substring(ASQLConnectorDriver.aSQLConnectorPrefix.length());
         }
         long timeout = 0;  // default to no retries to be consistent with other JDBC implemenations.
         long retryInterval = 50; // this was 1000 in the original code.  1 second is too long for each loop.
@@ -126,27 +126,27 @@ public class SQLDroidConnection implements Connection {
                 | android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
                 | android.database.sqlite.SQLiteDatabase.NO_LOCALIZED_COLLATORS;
         if ( info != null ) {
-            if ( info.getProperty(SQLDroidDriver.DATABASE_FLAGS) != null ) {
+            if ( info.getProperty(ASQLConnectorDriver.DATABASE_FLAGS) != null ) {
 
                 try {
-                    flags = Integer.parseInt(info.getProperty(SQLDroidDriver.DATABASE_FLAGS));
+                    flags = Integer.parseInt(info.getProperty(ASQLConnectorDriver.DATABASE_FLAGS));
                 } catch ( NumberFormatException nfe ) {
-                    Log.e("Error Parsing DatabaseFlags \"" + info.getProperty(SQLDroidDriver.DATABASE_FLAGS) + " not a number ", nfe);
+                    Log.e("Error Parsing DatabaseFlags \"" + info.getProperty(ASQLConnectorDriver.DATABASE_FLAGS) + " not a number ", nfe);
                 }
-            } else if ( info.getProperty(SQLDroidDriver.ADDITONAL_DATABASE_FLAGS) != null ) {
+            } else if ( info.getProperty(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS) != null ) {
                 try {
-                    int extraFlags = Integer.parseInt(info.getProperty(SQLDroidDriver.ADDITONAL_DATABASE_FLAGS));
+                    int extraFlags = Integer.parseInt(info.getProperty(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS));
                     flags |= extraFlags;
                 } catch ( NumberFormatException nfe ) {
-                    Log.e("Error Parsing DatabaseFlags \"" + info.getProperty(SQLDroidDriver.ADDITONAL_DATABASE_FLAGS) + " not a number ", nfe);
+                    Log.e("Error Parsing DatabaseFlags \"" + info.getProperty(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS) + " not a number ", nfe);
                 }
             }
         }
         synchronized(dbMap) {
             sqlitedb = dbMap.get(dbQname);
             if (sqlitedb == null) {
-                Log.i("SQLDroidConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Opening new database: " + dbQname);
-                sqlitedb = new SQLiteDatabase(dbQname, timeout, retryInterval, flags);
+                Log.i("ASQLConnectorConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Opening new database: " + dbQname);
+                sqlitedb = new ASQLConnectorDatabase(dbQname, timeout, retryInterval, flags);
                 dbMap.put(dbQname, sqlitedb);
             }
             clientMap.put(this, sqlitedb);
@@ -169,7 +169,7 @@ public class SQLDroidConnection implements Connection {
     }
 
     /** Returns the delegate SQLiteDatabase. */
-    public SQLiteDatabase getDb() {
+    public ASQLConnectorDatabase getDb() {
         return sqlitedb;
     }
 
@@ -178,7 +178,7 @@ public class SQLDroidConnection implements Connection {
     }
 
     /** This will create and return an exception.  For API levels less than 9 this will return
-     * a SQLDroidSQLException, for later APIs it will return a SQLException.
+     * a ASQLConnectorException, for later APIs it will return a SQLException.
      */
     public static SQLException chainException(android.database.SQLException sqlException) {
         if ( sqlThrowable < 0 || sqlThrowable >= 9 ) {
@@ -194,12 +194,12 @@ public class SQLDroidConnection implements Connection {
             }
         }
         // if the code above worked correctly, then the exception will have been returned.  Otherwise, we need
-        // to go through this clause and create a SQLDroidSQLException
+        // to go through this clause and create a ASQLConnectorException
         try {
-            // avoid a direct reference to the sqldroidSQLException so that app > API level 9 do not need that class.
-            final Constructor<?> c = SQLDroidConnection.class.getClassLoader().loadClass("fr.distrimind.oss.util.asqlconnector.SQLDroidSQLException").getDeclaredConstructor(new Class[] {android.database.SQLException.class});
-            // SQLDroidSQLException is an instance of (direct subclass of) SQLException, so the cast below is correct although
-            // the instance created will always be a SQLDroidSQLException
+            // avoid a direct reference to the ASQLConnectorException so that app > API level 9 do not need that class.
+            final Constructor<?> c = ASQLConnectorConnection.class.getClassLoader().loadClass("fr.distrimind.oss.util.asqlconnector.ASQLConnectorException").getDeclaredConstructor(new Class[] {android.database.SQLException.class});
+            // ASQLConnectorException is an instance of (direct subclass of) SQLException, so the cast below is correct although
+            // the instance created will always be a ASQLConnectorException
             return (SQLException)c.newInstance(new Object[]{sqlException});
         } catch (Exception e) {
             return new SQLException ("Unable to Chain SQLException " + sqlException.getMessage());
@@ -208,12 +208,12 @@ public class SQLDroidConnection implements Connection {
 
     @Override
     public void close() throws SQLException {
-        Log.v("SQLDroidConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+        Log.v("ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
         if (sqlitedb != null) {
             synchronized(dbMap) {
                 clientMap.remove(this);
                 if (!clientMap.containsValue(sqlitedb)) {
-                    Log.i("SQLDroidConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Closing the database since since last connection was closed.");
+                    Log.i("ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Closing the database since since last connection was closed.");
                     setAutoCommit(true);
                     sqlitedb.close();
                     dbMap.remove(sqlitedb.dbQname);
@@ -221,7 +221,7 @@ public class SQLDroidConnection implements Connection {
             }
             sqlitedb = null;
         } else {
-            Log.e("SQLDroidConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Duplicate close!");
+            Log.e("ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Duplicate close!");
         }
     }
 
@@ -239,7 +239,7 @@ public class SQLDroidConnection implements Connection {
 
     @Override
     public Statement createStatement() throws SQLException {
-        return new SQLDroidStatement(this);
+        return new ASQLConnectorStatement(this);
     }
 
     @Override
@@ -278,7 +278,7 @@ public class SQLDroidConnection implements Connection {
 
     @Override
     public DatabaseMetaData getMetaData() throws SQLException {
-        return new SQLDroidDatabaseMetaData(this);
+        return new ASQLConnectorDatabaseMetaData(this);
     }
 
     @SuppressWarnings("MagicConstant")
@@ -344,7 +344,7 @@ public class SQLDroidConnection implements Connection {
 
     @Override
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-        return new SQLDroidPreparedStatement(sql, this, autoGeneratedKeys);
+        return new ASQLConnectorPreparedStatement(sql, this, autoGeneratedKeys);
     }
 
     @Override
@@ -482,13 +482,13 @@ public class SQLDroidConnection implements Connection {
 
     @Override
     public Blob createBlob() throws SQLException {
-      // TODO: Can return new SQLDroidBlob(new byte[0]) once setBytes is implemented
+      // TODO: Can return new ASQLConnectorBlob(new byte[0]) once setBytes is implemented
       throw new SQLFeatureNotSupportedException("createBlob not supported");
     }
 
     @Override
-    public SQLDroidClob createClob() throws SQLException {
-      // TODO: Can return new SQLDroidClob("") once setString is implemented
+    public ASQLConnectorClob createClob() throws SQLException {
+      // TODO: Can return new ASQLConnectorClob("") once setString is implemented
       throw new SQLFeatureNotSupportedException("createClob not supported");
     }
 
@@ -574,7 +574,7 @@ public class SQLDroidConnection implements Connection {
 			try(ResultSet changedRowsCountResultSet = changedRowsCountStatement.executeQuery()) {
                 if (changedRowsCountResultSet != null && changedRowsCountResultSet.first()) {
                     changedRows = (int) changedRowsCountResultSet.getLong(1);
-                    // System.out.println("In SQLDroidConnection.changedRowsCount(), changedRows=" + changedRows);
+                    // System.out.println("In ASQLConnectorConnection.changedRowsCount(), changedRows=" + changedRows);
                 }
             }
 		} catch (SQLException e) {

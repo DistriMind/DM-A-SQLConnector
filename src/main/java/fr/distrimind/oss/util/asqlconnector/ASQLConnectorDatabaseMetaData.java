@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
+public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
     private final static Map<String, Integer> RULE_MAP = new HashMap<String, Integer>();
     private static final int SQLITE_DONE = 101;
     private static final String VIEW_TYPE = "VIEW";
@@ -19,7 +19,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
             getProcedureColumns, getProcedures, getSuperTypes, getTablePrivileges, getTableTypes, getUDTs,
             getVersionColumns;
 
-    SQLDroidConnection con;
+    ASQLConnectorConnection con;
 
     /**
      * Pattern used to extract a named primary key.
@@ -39,7 +39,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
     protected final static Pattern PK_NAMED_PATTERN =
             Pattern.compile(".* constraint +(.*?) +primary +key *\\((.*?)\\).*", Pattern.CASE_INSENSITIVE);
 
-    public SQLDroidDatabaseMetaData(SQLDroidConnection con) {
+    public ASQLConnectorDatabaseMetaData(ASQLConnectorConnection con) {
         this.con = con;
     }
 
@@ -192,7 +192,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
 				2 /* columnNullableUnknown */, null, null, null, null, -1, -1, "",
                 null, null, null, null, ""};
 
-        SQLiteDatabase db = con.getDb();
+        ASQLConnectorDatabase db = con.getDb();
         final String[] types = new String[]{TABLE_TYPE, VIEW_TYPE};
         ResultSet rs = null;
         List<Cursor> cursorList = new ArrayList<>();
@@ -258,16 +258,16 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
             }
         }
 
-        SQLDroidResultSet resultSet;
+        ASQLConnectorResultSet resultSet;
         Cursor[] cursors = new Cursor[cursorList.size()];
         cursors = cursorList.toArray(cursors);
 
         if (cursors.length == 0) {
-            resultSet = new SQLDroidResultSet(new MatrixCursor(columnNames, 0));
+            resultSet = new ASQLConnectorResultSet(new MatrixCursor(columnNames, 0));
         } else if (cursors.length == 1) {
-            resultSet = new SQLDroidResultSet(cursors[0]);
+            resultSet = new ASQLConnectorResultSet(cursors[0]);
         } else {
-            resultSet = new SQLDroidResultSet(new MergeCursor(cursors));
+            resultSet = new ASQLConnectorResultSet(new MergeCursor(cursors));
         }
         return resultSet;
     }
@@ -731,7 +731,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
         final String[] columnNames = new String[]{"TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "COLUMN_NAME", "KEY_SEQ", "PK_NAME"};
         final Object[] columnValues = new Object[]{null, null, null, null, null, null};
-        SQLiteDatabase db = con.getDb();
+        ASQLConnectorDatabase db = con.getDb();
 
         Cursor c = db.rawQuery("pragma table_info('" + table + "')", new String[]{});
         MatrixCursor mc = new MatrixCursor(columnNames);
@@ -745,7 +745,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
         }
         // The matrix cursor should be sorted by column name, but isn't
         c.close();
-        return new SQLDroidResultSet(mc);
+        return new ASQLConnectorResultSet(mc);
     }
 
     @Override
@@ -897,7 +897,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
         final String selectStringEnd = "' as TABLE_TYPE, 'No Comment' as REMARKS, null as TYPE_CAT, null as TYPE_SCHEM, null as TYPE_NAME, null as SELF_REFERENCING_COL_NAME, null as REF_GENERATION" +
                 " FROM sqlite_temp_master WHERE tbl_name LIKE ? AND name NOT LIKE 'android_metadata' AND upper(type) = ? ORDER BY 3";
 
-        SQLiteDatabase db = con.getDb();
+        ASQLConnectorDatabase db = con.getDb();
         List<Cursor> cursorList = new ArrayList<Cursor>();
         for (String tableType : types) {
 			String selectString = selectStringStart +
@@ -910,16 +910,16 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
                     tableNamePattern, tableType.toUpperCase()});
             cursorList.add(c);
         }
-        SQLDroidResultSet resultSet;
+        ASQLConnectorResultSet resultSet;
         Cursor[] cursors = new Cursor[cursorList.size()];
         cursors = cursorList.toArray(cursors);
 
         if (cursors.length == 0) {
             resultSet = null;  // is this a valid return?? I think this can only occur on a SQL exception
         } else if (cursors.length == 1) {
-            resultSet = new SQLDroidResultSet(cursors[0]);
+            resultSet = new ASQLConnectorResultSet(cursors[0]);
         } else {
-            resultSet = new SQLDroidResultSet(new MergeCursor(cursors));
+            resultSet = new ASQLConnectorResultSet(new MergeCursor(cursors));
         }
         return resultSet;
     }
@@ -964,7 +964,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
 //        getTypeInfo.clearParameters();
 //        return getTypeInfo.executeQuery();
 
-        return new SQLDroidResultSet(con.getDb().rawQuery(sql, new String[0]));
+        return new ASQLConnectorResultSet(con.getDb().rawQuery(sql, new String[0]));
     }
 
 

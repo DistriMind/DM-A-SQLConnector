@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Map;
 
-public class SQLDroidResultSet implements ResultSet {
+public class ASQLConnectorResultSet implements ResultSet {
     private static final String DATE_PATTERN = "yyyy-MM-dd";
 
     private static final String TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -31,7 +31,7 @@ public class SQLDroidResultSet implements ResultSet {
     // TODO: Implement behavior (as Xerial driver)
     private int limitRows = 0;
 
-    public SQLDroidResultSet(Cursor c) throws SQLException {
+    public ASQLConnectorResultSet(Cursor c) throws SQLException {
         this.c = c;
         if (dump) {
             dumpResultSet();
@@ -83,7 +83,7 @@ public class SQLDroidResultSet implements ResultSet {
       c.moveToLast();
       c.moveToNext();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -93,7 +93,7 @@ public class SQLDroidResultSet implements ResultSet {
       c.moveToFirst();
       c.moveToPrevious();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -116,7 +116,7 @@ public class SQLDroidResultSet implements ResultSet {
         c.close();
       }
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -132,7 +132,7 @@ public class SQLDroidResultSet implements ResultSet {
       // JDBC style column index starts from 1; Android database cursor has zero-based index
       return (c.getColumnIndexOrThrow(columnName) + 1);  
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -141,7 +141,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.moveToFirst();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -206,9 +206,9 @@ public class SQLDroidResultSet implements ResultSet {
   public Blob getBlob(int index) throws SQLException {
     try {
       byte [] b = getBytes(index);
-      return new SQLDroidBlob(b);
+      return new ASQLConnectorBlob(b);
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -224,7 +224,7 @@ public class SQLDroidResultSet implements ResultSet {
       lastColumnRead = index;
       return c.getInt(ci(index)) != 0;
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -240,7 +240,7 @@ public class SQLDroidResultSet implements ResultSet {
       lastColumnRead = index;
       return (byte)c.getShort(ci(index));
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -256,12 +256,12 @@ public class SQLDroidResultSet implements ResultSet {
             lastColumnRead = index;
             byte [] bytes = c.getBlob(ci(index));
             // SQLite includes the zero-byte at the end for Strings.
-            if (SQLDroidResultSetMetaData.getType(c, ci(index)) == 3) { //  Cursor.FIELD_TYPE_STRING
+            if (ASQLConnectorResultSetMetaData.getType(c, ci(index)) == 3) { //  Cursor.FIELD_TYPE_STRING
 		        bytes = Arrays.copyOf(bytes, bytes.length - 1);
             }
             return bytes;
         } catch (android.database.SQLException e) {
-            throw SQLDroidConnection.chainException(e);
+            throw ASQLConnectorConnection.chainException(e);
         }
     }
 
@@ -283,12 +283,12 @@ public class SQLDroidResultSet implements ResultSet {
   }
 
   @Override
-  public SQLDroidClob getClob(int colID) throws SQLException {
+  public ASQLConnectorClob getClob(int colID) throws SQLException {
     String clobString = getString(colID);
     if(clobString == null){
     	return null;
     }
-    return new SQLDroidClob(clobString);
+    return new ASQLConnectorClob(clobString);
   }
 
   @Override
@@ -337,7 +337,7 @@ public class SQLDroidResultSet implements ResultSet {
       }
       return date;
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -365,7 +365,7 @@ public class SQLDroidResultSet implements ResultSet {
       lastColumnRead = index;
       return c.getDouble(ci(index));
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -391,7 +391,7 @@ public class SQLDroidResultSet implements ResultSet {
       lastColumnRead = index;
       return c.getFloat(ci(index));
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -407,7 +407,7 @@ public class SQLDroidResultSet implements ResultSet {
       lastColumnRead = index;
       return c.getInt(ci(index));
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -423,7 +423,7 @@ public class SQLDroidResultSet implements ResultSet {
       lastColumnRead = index;
       return c.getLong(ci(index));
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -435,17 +435,17 @@ public class SQLDroidResultSet implements ResultSet {
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    return new SQLDroidResultSetMetaData(c);
+    return new ASQLConnectorResultSetMetaData(c);
   }
 
     @Override
     public Object getObject(int colID) throws SQLException {
         lastColumnRead = colID;
         int newIndex = ci(colID);
-        switch(SQLDroidResultSetMetaData.getType(c, newIndex)) {
+        switch(ASQLConnectorResultSetMetaData.getType(c, newIndex)) {
             case 4: // Cursor.FIELD_TYPE_BLOB:
                 //CONVERT TO BYTE[] OBJECT
-                return new SQLDroidBlob(c.getBlob(newIndex));
+                return new ASQLConnectorBlob(c.getBlob(newIndex));
             case 2: // Cursor.FIELD_TYPE_FLOAT:
                 return c.getFloat(newIndex);
             case 1: // Cursor.FIELD_TYPE_INTEGER:
@@ -504,7 +504,7 @@ public class SQLDroidResultSet implements ResultSet {
       // convert to jdbc standard (counting from one)
       return c.getPosition() + 1;
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -514,7 +514,7 @@ public class SQLDroidResultSet implements ResultSet {
       lastColumnRead = index;
       return c.getShort(ci(index));
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -536,7 +536,7 @@ public class SQLDroidResultSet implements ResultSet {
       lastColumnRead = index;
       return c.getString(ci(index));
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -597,7 +597,7 @@ public class SQLDroidResultSet implements ResultSet {
           }
       }
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -671,7 +671,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.isAfterLast();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -683,7 +683,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.isBeforeFirst();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -695,7 +695,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.isFirst();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -707,7 +707,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.isLast();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -716,7 +716,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.moveToLast();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -735,7 +735,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.moveToNext();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -744,7 +744,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.moveToPrevious();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -753,7 +753,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       c.requery();
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 
@@ -1033,7 +1033,7 @@ public class SQLDroidResultSet implements ResultSet {
     try {
       return c.isNull(ci(lastColumnRead));
     } catch (android.database.SQLException e) {
-      throw SQLDroidConnection.chainException(e);
+      throw ASQLConnectorConnection.chainException(e);
     }
   }
 

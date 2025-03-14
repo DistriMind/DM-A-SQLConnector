@@ -2,7 +2,7 @@
 
 # DM-A-SQLConnector
 
-DM-A-SQLConnector is a JDBC driver for Android's sqlite database (android.database.sqlite.SQLiteDatabase) originally conceived by Kristian Lein-Mathisen with the project name SQLDroid. 
+DM-A-SQLConnector is a JDBC driver for Android's sqlite database (android.database.sqlite.SQLiteDatabase) originally conceived by Kristian Lein-Mathisen with the project name ASQLConnector. 
 
 DM-A-SQLConnector lets you access your app's database through JDBC. Android ships with the necessary interfaces needed to use JDBC drivers, but it does not officially ship with a driver for its built-in SQLite database engine.  When porting code from other projects, you can conveniently replace the JDBC url to jdbc:sqlite to access an SQLite database on Android.
 
@@ -88,11 +88,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            DriverManager.registerDriver((Driver) Class.forName("fr.distrimind.oss.util.asqlconnector.SQLDroidDriver").getConstructor().newInstance());
+            DriverManager.registerDriver((Driver) Class.forName("fr.distrimind.oss.util.asqlconnector.ASQLConnectorDriver").getConstructor().newInstance());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to register SQLDroidDriver");
+            throw new RuntimeException("Failed to register ASQLConnectorDriver");
         }
-        String jdbcUrl = "jdbc:sqldroid:" + "/data/data/" + getPackageName() + "/my-database.db";
+        String jdbcUrl = "jdbc:asqlconnector:" + "/data/data/" + getPackageName() + "/my-database.db";
         try {
             this.connection = DriverManager.getConnection(jdbcUrl);
         } catch (SQLException e) {
@@ -126,7 +126,7 @@ You can set the DM-A-SQLConnector log output level like this
 
 You can turn on resultset dumps like this
 
-    fr.distrimind.oss.util.asqlconnector.SQLDroidResultSet.dump = true;
+    fr.distrimind.oss.util.asqlconnector.ASQLConnectorResultSet.dump = true;
 
 
 # License

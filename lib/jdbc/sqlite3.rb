@@ -1,11 +1,11 @@
-warn 'SqlDroid is only for use with JRuby' if RUBY_ENGINE != 'jruby'
+warn 'ASQLConnector is only for use with JRuby' if RUBY_ENGINE != 'jruby'
 
-require 'sqldroid/version'
+require 'asqlconnector/version'
 
 module Jdbc
   module SQLite3
     def self.driver_jar
-      "sqldroid/sqldroid-#{DM-A-SQLConnector::MAVEN_VERSION}.jar"
+      "asqlconnector/asqlconnector-#{DM-A-SQLConnector::MAVEN_VERSION}.jar"
     end
 
     def self.load_driver(method = :load)

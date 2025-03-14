@@ -26,7 +26,7 @@ import android.database.sqlite.SQLiteException;
  * later there will be two inserts (or 3,  200ms later, etc.).
  * This code now also makes the timeouts optional and attempts to minimize the performance penalties in this case.
  */
-public class SQLiteDatabase {
+public class ASQLConnectorDatabase {
 
   protected static enum Transaction {
     setTransactionSuccessful,endTransaction,close,beginTransaction
@@ -58,7 +58,7 @@ public class SQLiteDatabase {
    * @throws SQLException thrown if the attempt to connect to the database throws an exception
    * other than a locked exception or throws a locked exception after the timeout has expired.
    */
-  public SQLiteDatabase(String dbQname, long timeout, long retryInterval, int flags) throws SQLException {
+  public ASQLConnectorDatabase(String dbQname, long timeout, long retryInterval, int flags) throws SQLException {
     super();
     this.dbQname = dbQname;
     this.timeout = timeout;
@@ -77,10 +77,10 @@ public class SQLiteDatabase {
           }
           delta = System.currentTimeMillis() - timeNow;
           if ( delta >= timeout ) {
-            throw SQLDroidConnection.chainException(e);
+            throw ASQLConnectorConnection.chainException(e);
           }
         } else {
-          throw SQLDroidConnection.chainException(e);
+          throw ASQLConnectorConnection.chainException(e);
         }
       }
     }
@@ -116,7 +116,7 @@ public class SQLiteDatabase {
         if ( isLockedException(e) ) {
           delta = System.currentTimeMillis() - queryStart;
         } else {
-          throw SQLDroidConnection.chainException(e);
+          throw ASQLConnectorConnection.chainException(e);
         }
       }
     } while (delta < timeout);
@@ -139,7 +139,7 @@ public class SQLiteDatabase {
         if ( isLockedException(e) ) {
           delta = System.currentTimeMillis() - timeNow;
         } else {
-          throw SQLDroidConnection.chainException(e);
+          throw ASQLConnectorConnection.chainException(e);
         }
       }
     } while (delta < timeout);
@@ -162,7 +162,7 @@ public class SQLiteDatabase {
         if ( isLockedException(e) ) {
           delta = System.currentTimeMillis() - timeNow;
         } else {
-          throw SQLDroidConnection.chainException(e);
+          throw ASQLConnectorConnection.chainException(e);
         }
       }
     } while (delta < timeout);
@@ -210,7 +210,7 @@ public class SQLiteDatabase {
         if ( isLockedException(e) ) {
           delta = System.currentTimeMillis() - timeNow;
         } else {
-          throw SQLDroidConnection.chainException(e);
+          throw ASQLConnectorConnection.chainException(e);
         }
       }
     } while (delta < timeout);

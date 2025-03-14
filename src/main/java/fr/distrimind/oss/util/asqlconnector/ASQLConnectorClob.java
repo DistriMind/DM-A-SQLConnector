@@ -31,7 +31,7 @@ import java.sql.SQLException;
  * @see <a href="https://github.com/datanucleus/datanucleus-rdbms/blob/master/src/main/java/org/datanucleus/store/rdbms/mapping/datastore/ClobImpl.java">ClobImpl from DataNucleus Project</a>
  * 
  */
-public class SQLDroidClob implements Clob, NClob
+public class ASQLConnectorClob implements Clob, NClob
 {
     private String string;
     private final long length;
@@ -49,7 +49,7 @@ public class SQLDroidClob implements Clob, NClob
      * Constructor taking a string.
      * @param string The string.
      */
-    public SQLDroidClob(String string)
+    public ASQLConnectorClob(String string)
     {
         if (string == null)
         {

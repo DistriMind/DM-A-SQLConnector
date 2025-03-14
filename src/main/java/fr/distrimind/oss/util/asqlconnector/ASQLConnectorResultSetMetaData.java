@@ -7,7 +7,7 @@ import java.sql.Types;
 
 import android.database.Cursor;
 
-public class SQLDroidResultSetMetaData implements ResultSetMetaData {
+public class ASQLConnectorResultSetMetaData implements ResultSetMetaData {
 
 	private final Cursor cursor;
     private static Method getType;
@@ -19,7 +19,7 @@ public class SQLDroidResultSetMetaData implements ResultSetMetaData {
         }
     }
 
-    public SQLDroidResultSetMetaData(Cursor cursor) {
+    public ASQLConnectorResultSetMetaData(Cursor cursor) {
       if (cursor == null) {
           throw new NullPointerException("Cursor required to be not null.");
       }		

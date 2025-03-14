@@ -7,11 +7,11 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
-public class SQLDroidBlob implements Blob {
+public class ASQLConnectorBlob implements Blob {
 
 	byte [] b;
 	
-	public SQLDroidBlob(byte [] b) {
+	public ASQLConnectorBlob(byte [] b) {
 		this.b = b;
 	}
 	

@@ -13,14 +13,14 @@ import java.util.Properties;
 
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class SQLDroidConnectionTest {
+public class ASQLConnectorConnectionTest {
     public static final int CREATE_IF_NECESSARY = 268435456;
     public static final int OPEN_READWRITE = 0;
     @SuppressWarnings("EmptyTryBlock")
 	@Test
     public void shouldConnectToEmptyFile() throws SQLException, IOException {
         Properties properties = new Properties();
-        properties.put(SQLDroidDriver.ADDITONAL_DATABASE_FLAGS,
+        properties.put(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS,
                 CREATE_IF_NECESSARY
                         | OPEN_READWRITE);
 
@@ -30,7 +30,7 @@ public class SQLDroidConnectionTest {
         Assert.assertTrue(dbFile.exists());
 
         String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-        Connection conn = new SQLDroidDriver().connect(jdbcUrl, properties);
+        Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, properties);
         Assert.assertFalse(conn.isClosed());
         conn.close();
     }
@@ -39,7 +39,7 @@ public class SQLDroidConnectionTest {
     public void shouldSupportQueryPartOfURL() throws SQLException {
         File dbFile = cleanDbFile("query-test.db");
         String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath() + "?timeout=30";
-        Connection conn = new SQLDroidDriver().connect(jdbcUrl, new Properties());
+        Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
         Assert.assertFalse(conn.isClosed());
         conn.close();
     }
@@ -48,7 +48,7 @@ public class SQLDroidConnectionTest {
     public void shouldDealWithInvalidDirectoryGivenAsFile() throws SQLException, IOException {
         File dbFile = cleanDbFile("db-as-dir.db");
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getParentFile().getAbsolutePath();
-        try(Connection ignored=new SQLDroidDriver().connect(jdbcUrl, new Properties()))
+        try(Connection ignored=new ASQLConnectorDriver().connect(jdbcUrl, new Properties()))
         {
             Assert.fail();
         }
@@ -69,7 +69,7 @@ public class SQLDroidConnectionTest {
         }
         File dbFile = new File(dbDir, "dbfile.db");
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-        try(Connection ignored=new SQLDroidDriver().connect(jdbcUrl, new Properties()))
+        try(Connection ignored=new ASQLConnectorDriver().connect(jdbcUrl, new Properties()))
         {
             Assert.fail();
         }
@@ -92,7 +92,7 @@ public class SQLDroidConnectionTest {
         Assert.assertFalse(dbSubdir.exists());
 
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-        new SQLDroidDriver().connect(jdbcUrl, new Properties()).close();
+        new ASQLConnectorDriver().connect(jdbcUrl, new Properties()).close();
         Assert.assertTrue(dbFile.exists());
     }
 
@@ -100,10 +100,10 @@ public class SQLDroidConnectionTest {
     public void shouldSupportReconnectAfterAbortedTransaction() throws SQLException {
         File dbFile = cleanDbFile("aborted-transaction.db");
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-        try (Connection connection = new SQLDroidDriver().connect(jdbcUrl, new Properties())) {
+        try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
             connection.setAutoCommit(false);
         }
-        Connection conn = new SQLDroidDriver().connect(jdbcUrl, new Properties());
+        Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
         Assert.assertFalse(conn.isClosed());
         conn.close();
     }
@@ -112,12 +112,12 @@ public class SQLDroidConnectionTest {
     public void shouldAllowNewTransactionAfterCommit() throws SQLException {
         File dbFile = cleanDbFile("transaction.db");
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-        try (Connection connection = new SQLDroidDriver().connect(jdbcUrl, new Properties())) {
+        try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
             connection.setAutoCommit(false);
             connection.commit();
         }
 
-        try (Connection connection = new SQLDroidDriver().connect(jdbcUrl, new Properties())) {
+        try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
             // The following line should not throw an exception "database is
             // locked"
             connection.setAutoCommit(false);
@@ -128,8 +128,8 @@ public class SQLDroidConnectionTest {
     public void shouldAllowMultipleConnections() throws SQLException {
         File dbFile = cleanDbFile("multiconnect.db");
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-        Connection connection1 = new SQLDroidDriver().connect(jdbcUrl, new Properties());
-        Connection connection2 = new SQLDroidDriver().connect(jdbcUrl, new Properties());
+        Connection connection1 = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
+        Connection connection2 = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
         connection1.close();
         connection2.createStatement().executeQuery("select 1");
         connection2.close();

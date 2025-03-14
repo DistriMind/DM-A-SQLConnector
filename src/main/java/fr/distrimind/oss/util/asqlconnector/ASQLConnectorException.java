@@ -7,14 +7,14 @@ import android.database.SQLException;
 
 
 
-public class SQLDroidSQLException extends java.sql.SQLException {
+public class ASQLConnectorException extends java.sql.SQLException {
   private static final long serialVersionUID = -7299376329007161001L;
 
   /** The exception that this exception was created for. */
   SQLException sqlException;
   
   /** Create a hard java.sql.SQLException from the RuntimeException android.database.SQLException. */ 
-  public SQLDroidSQLException (SQLException sqlException) {
+  public ASQLConnectorException(SQLException sqlException) {
     this.sqlException = sqlException;
   }
 

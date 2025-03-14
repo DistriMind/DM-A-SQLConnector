@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
 public class DriverUnitTest {
 
   /** Going to use DM-A-SQLConnector JDBC Driver */
-  protected String driverName = "fr.distrimind.oss.util.asqlconnector.SQLDroidDriver";
+  protected String driverName = "fr.distrimind.oss.util.asqlconnector.ASQLConnectorDriver";
   
   /** Common prefix for creating JDBC URL */ 
   protected String JDBC_URL_PREFIX = "jdbc:sqlite:";
@@ -694,7 +694,7 @@ public class DriverUnitTest {
         String jdbcURL = JDBC_URL_PREFIX + dbFile;               
  
         Properties removeLocale = new Properties();
-        removeLocale.put(SQLDroidDriver.ADDITONAL_DATABASE_FLAGS, NO_LOCALIZED_COLLATORS);
+        removeLocale.put(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS, NO_LOCALIZED_COLLATORS);
         Connection conn1 = DriverManager.getConnection(jdbcURL,removeLocale);
         System.out.println("After getting connection...1");
         

@@ -22,13 +22,13 @@ import junit.framework.AssertionFailedError;
 
 
 /**
- * This is a refactoring is SQLDroidTest that shares quite a bit of common code between test methods.
+ * This is a refactoring is ASQLConnectorTest that shares quite a bit of common code between test methods.
  * I'm not sure which approach reads the best.
  * 
  * @author Johannes Brodwall <johannes@brodwall.com>
  */
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class SQLDroidTest2 {
+public class ASQLConnectorTest2 {
 
     // TODO: This should be /data/data/fr.distrimind.oss.util.asqlconnector/databases/ if running on device
     private static final File DB_DIR = new File("./target/data/fr.distrimind.oss.util.asqlconnector/databases/");
@@ -361,7 +361,7 @@ public class SQLDroidTest2 {
     public void createConnection() throws SQLException {
         try {
             DriverManager.registerDriver((Driver) (Class
-                    .forName("fr.distrimind.oss.util.asqlconnector.SQLDroidDriver", true, SQLDroidTest2.class.getClassLoader()).getConstructor().newInstance()));
+                    .forName("fr.distrimind.oss.util.asqlconnector.ASQLConnectorDriver", true, ASQLConnectorTest2.class.getClassLoader()).getConstructor().newInstance()));
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException |
 				 NoSuchMethodException | InvocationTargetException e) {
             throw new AssertionFailedError(e.toString());
@@ -375,7 +375,7 @@ public class SQLDroidTest2 {
     }
 
     private String createDatabase() {
-        String filename = "sqldroid-test.db";
+        String filename = "asqlconnector-test.db";
         DB_DIR.mkdirs();
         Assert.assertTrue(DB_DIR.exists());
 

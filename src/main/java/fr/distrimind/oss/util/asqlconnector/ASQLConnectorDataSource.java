@@ -11,25 +11,25 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
-public class DroidDataSource implements DataSource {
+public class ASQLConnectorDataSource implements DataSource {
     Connection connection = null;    
     protected String description = "Android Sqlite Data Source";
     protected String packageName;
     protected String databaseName;  
 
-    public DroidDataSource() {
+    public ASQLConnectorDataSource() {
 
     }        
         
-    public DroidDataSource(String packageName, String databaseName) {
+    public ASQLConnectorDataSource(String packageName, String databaseName) {
       	setPackageName(packageName);
        	setDatabaseName(databaseName);
     }
         
     @Override
     public Connection getConnection() throws SQLException {
-      	String url = "jdbc:sqldroid:" + "/data/data/" + packageName + "/" + databaseName + ".db";
-        connection = new SQLDroidDriver().connect(url , new Properties());
+      	String url = "jdbc:asqlconnector:" + "/data/data/" + packageName + "/" + databaseName + ".db";
+        connection = new ASQLConnectorDriver().connect(url , new Properties());
         return connection;
     }
 
