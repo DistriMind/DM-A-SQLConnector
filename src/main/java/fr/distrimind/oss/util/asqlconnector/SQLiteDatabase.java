@@ -1,4 +1,4 @@
-package org.sqldroid;
+package fr.distrimind.oss.util.asqlconnector;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;

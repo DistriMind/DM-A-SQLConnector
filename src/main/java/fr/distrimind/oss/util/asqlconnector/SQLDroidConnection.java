@@ -1,4 +1,4 @@
-package org.sqldroid;
+package fr.distrimind.oss.util.asqlconnector;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -68,7 +68,7 @@ public class SQLDroidConnection implements Connection {
      *
      * @param url the URL string, typically something like
      * "jdbc:sqlite:/data/data/your-package/databasefilename" so for example:
-     *  "jdbc:sqlite:/data/data/org.sqldroid.examples/databases/sqlite.db"
+     *  "jdbc:sqlite:/data/data/fr.distrimind.oss.util.asqlconnector.examples/databases/sqlite.db"
      * @param info Properties object with options.  Supported options are "timeout", "retry", and "shared".
      */
     public SQLDroidConnection(String url, Properties info) throws SQLException {
@@ -197,7 +197,7 @@ public class SQLDroidConnection implements Connection {
         // to go through this clause and create a SQLDroidSQLException
         try {
             // avoid a direct reference to the sqldroidSQLException so that app > API level 9 do not need that class.
-            final Constructor<?> c = SQLDroidConnection.class.getClassLoader().loadClass("org.sqldroid.SQLDroidSQLException").getDeclaredConstructor(new Class[] {android.database.SQLException.class});
+            final Constructor<?> c = SQLDroidConnection.class.getClassLoader().loadClass("fr.distrimind.oss.util.asqlconnector.SQLDroidSQLException").getDeclaredConstructor(new Class[] {android.database.SQLException.class});
             // SQLDroidSQLException is an instance of (direct subclass of) SQLException, so the cast below is correct although
             // the instance created will always be a SQLDroidSQLException
             return (SQLException)c.newInstance(new Object[]{sqlException});

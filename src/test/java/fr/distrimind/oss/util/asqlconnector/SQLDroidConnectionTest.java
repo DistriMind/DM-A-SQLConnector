@@ -1,4 +1,4 @@
-package org.sqldroid;
+package fr.distrimind.oss.util.asqlconnector;
 
 
 import org.junit.Assert;
@@ -135,7 +135,7 @@ public class SQLDroidConnectionTest {
         connection2.close();
     }
 
-    private static final File DB_DIR = new File("./target/data/org.sqldroid/databases/");
+    private static final File DB_DIR = new File("./target/data/fr.distrimind.oss.util.asqlconnector/databases/");
 
     private File cleanDbFile(String filename) {
         DB_DIR.mkdirs();

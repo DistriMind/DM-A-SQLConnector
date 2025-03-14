@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            DriverManager.registerDriver((Driver) Class.forName("org.sqldroid.SQLDroidDriver").getConstructor().newInstance());
+            DriverManager.registerDriver((Driver) Class.forName("fr.distrimind.oss.util.asqlconnector.SQLDroidDriver").getConstructor().newInstance());
         } catch (Exception e) {
             throw new RuntimeException("Failed to register SQLDroidDriver");
         }
@@ -124,11 +124,11 @@ https://github.com/ruboto/ruboto/wiki/Tutorial%3A-Using-an-SQLite-database-with-
 
 You can set the SQLDroid log output level like this
 
-    org.sqldroid.Log.LEVEL = android.util.Log.VERBOSE;
+    fr.distrimind.oss.util.asqlconnector.Log.LEVEL = android.util.Log.VERBOSE;
 
 You can turn on resultset dumps like this
 
-    org.sqldroid.SQLDroidResultSet.dump = true;
+    fr.distrimind.oss.util.asqlconnector.SQLDroidResultSet.dump = true;
 
 
 # License

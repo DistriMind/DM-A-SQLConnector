@@ -1,4 +1,4 @@
-package org.sqldroid;
+package fr.distrimind.oss.util.asqlconnector;
 
 /**
  * thanks to 

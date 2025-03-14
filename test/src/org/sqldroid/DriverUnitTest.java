@@ -1,4 +1,4 @@
-package org.sqldroid;
+package fr.distrimind.oss.util.asqlconnector;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -22,13 +22,13 @@ import junit.framework.TestSuite;
 public class DriverUnitTest extends TestCase {
 
   /** Going to use SQLDroid JDBC Driver */
-  protected String driverName = "org.sqldroid.SQLDroidDriver";
+  protected String driverName = "fr.distrimind.oss.util.asqlconnector.SQLDroidDriver";
   
   /** Common prefix for creating JDBC URL */ 
   protected String JDBC_URL_PREFIX = "jdbc:sqlite:";
   
   /** Package name of this app */
-  protected String packageName = "org.sqldroid";
+  protected String packageName = "fr.distrimind.oss.util.asqlconnector";
   
   /** Database file directory for this app on Android */
   protected String DB_DIRECTORY = "/data/data/" + packageName + "/databases/";

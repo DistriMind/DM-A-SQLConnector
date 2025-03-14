@@ -1,4 +1,4 @@
-package org.sqldroid;
+package fr.distrimind.oss.util.asqlconnector;
 
 import org.junit.*;
 
@@ -30,8 +30,8 @@ import junit.framework.AssertionFailedError;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class SQLDroidTest2 {
 
-    // TODO: This should be /data/data/org.sqldroid/databases/ if running on device
-    private static final File DB_DIR = new File("./target/data/org.sqldroid/databases/");
+    // TODO: This should be /data/data/fr.distrimind.oss.util.asqlconnector/databases/ if running on device
+    private static final File DB_DIR = new File("./target/data/fr.distrimind.oss.util.asqlconnector/databases/");
 
     private Connection conn;
 
@@ -361,7 +361,7 @@ public class SQLDroidTest2 {
     public void createConnection() throws SQLException {
         try {
             DriverManager.registerDriver((Driver) (Class
-                    .forName("org.sqldroid.SQLDroidDriver", true, SQLDroidTest2.class.getClassLoader()).getConstructor().newInstance()));
+                    .forName("fr.distrimind.oss.util.asqlconnector.SQLDroidDriver", true, SQLDroidTest2.class.getClassLoader()).getConstructor().newInstance()));
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException |
 				 NoSuchMethodException | InvocationTargetException e) {
             throw new AssertionFailedError(e.toString());

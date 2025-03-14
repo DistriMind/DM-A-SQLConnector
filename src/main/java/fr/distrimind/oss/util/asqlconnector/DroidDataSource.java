@@ -1,4 +1,4 @@
-package org.sqldroid;
+package fr.distrimind.oss.util.asqlconnector;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -29,7 +29,7 @@ public class DroidDataSource implements DataSource {
     @Override
     public Connection getConnection() throws SQLException {
       	String url = "jdbc:sqldroid:" + "/data/data/" + packageName + "/" + databaseName + ".db";
-        connection = new org.sqldroid.SQLDroidDriver().connect(url , new Properties());
+        connection = new SQLDroidDriver().connect(url , new Properties());
         return connection;
     }
 
