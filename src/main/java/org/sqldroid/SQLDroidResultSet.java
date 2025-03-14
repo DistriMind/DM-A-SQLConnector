@@ -65,7 +65,7 @@ public class SQLDroidResultSet implements ResultSet {
 
   /**
    * convert JDBC column index (one-based) to sqlite column index (zero-based)
-   * @param colID
+   * @param colID the column id
    */
   private int ci(int colID) {
     return colID - 1;
@@ -447,9 +447,9 @@ public class SQLDroidResultSet implements ResultSet {
                 //CONVERT TO BYTE[] OBJECT
                 return new SQLDroidBlob(c.getBlob(newIndex));
             case 2: // Cursor.FIELD_TYPE_FLOAT:
-                return new Float(c.getFloat(newIndex));
+                return c.getFloat(newIndex);
             case 1: // Cursor.FIELD_TYPE_INTEGER:
-                return new Integer(c.getInt(newIndex));
+                return c.getInt(newIndex);
             case 3: // Cursor.FIELD_TYPE_STRING:
                 return c.getString(newIndex);
             case 0: // Cursor.FIELD_TYPE_NULL:
@@ -1042,6 +1042,7 @@ public class SQLDroidResultSet implements ResultSet {
     return iface != null && iface.isAssignableFrom(getClass());
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
     if (isWrapperFor(iface)) {

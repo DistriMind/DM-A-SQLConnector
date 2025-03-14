@@ -13,7 +13,7 @@ public class SQLDroidResultSetMetaData implements ResultSetMetaData {
     private static Method getType;
     static {
         try {
-            getType = Cursor.class.getMethod("getType", new Class[] {int.class});
+            getType = Cursor.class.getMethod("getType", int.class);
         } catch (Exception e) {
             getType = null;
         }
@@ -30,7 +30,7 @@ public class SQLDroidResultSetMetaData implements ResultSetMetaData {
         if (getType != null) {
             try {
                 return (Integer) getType.invoke(cursor, column);
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
         }
         return Types.OTHER; // return something that can be used to understand that the type is unknown.
     }
@@ -211,7 +211,8 @@ public class SQLDroidResultSetMetaData implements ResultSetMetaData {
       return iface != null && iface.isAssignableFrom(getClass());
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public  <T> T unwrap(Class<T> iface) throws SQLException {
       if (isWrapperFor(iface)) {
         return (T) this;

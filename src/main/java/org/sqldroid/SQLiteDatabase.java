@@ -9,26 +9,21 @@ import android.database.sqlite.SQLiteException;
 /** A  proxy class for the database that allows actions to be retried without forcing every method 
  * through the reflection process.  This was originally implemented as an interface and a Proxy.
  * While quite slick, it always used reflection which can be horribly slow.
- * 
  * SQLiteDatabaseLockedException did not exist before API 11 so this resolves that problem by
  * using reflection to determine if the Exception is a SQLiteDatabaseLockedException which will,
  * presumably, only work on API 11 or later.
- * 
  * This is still pretty ugly.  Part of the problem is an architectural decision to handle errors within
  * the JDBC driver.
- * 
  * ALL databases fail. Any code that used JDBC has to be able to handle those failures.
  * The locking errors in SQLite are analogous to network failures in other DBs  Handling them within the
  * driver deprives the upper level code of the opportunity to handle these in an application specific 
  * manner.  The timouts in the first implementation were extreme.  The loops would wait one second between attempts 
  * to retry that, like, the middle of next week in computer terms.  
- * 
  * To provide a specific problem case for the timout code.  We routinely read data on sub-second intervals.
  * Frequently on a 100ms timebase.  The data collection and insert usually occur on the same thread.  This 
  * isn't a requirement, but it helps to have the code synchronized. If we attempt an insert, we want the 
  * code to fail fast.  That insert is cached and will be completed when the next insert is attempted.  So 100ms
  * later there will be two inserts (or 3,  200ms later, etc.).
- * 
  * This code now also makes the timeouts optional and attempts to minimize the performance penalties in this case.
  */
 public class SQLiteDatabase {
@@ -57,7 +52,7 @@ public class SQLiteDatabase {
   protected Method getChangedRowCount;
 
   /**
-   * @param dbQname
+   * @param dbQname the database name
    * @param timeout
    * @param retryInterval
    * @throws SQLException thrown if the attempt to connect to the database throws an exception

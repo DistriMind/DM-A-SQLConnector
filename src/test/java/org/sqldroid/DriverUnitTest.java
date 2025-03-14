@@ -19,14 +19,8 @@ import java.util.Properties;
 
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
-
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 16)
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class DriverUnitTest {
 
   /** Going to use SQLDroid JDBC Driver */
@@ -64,7 +58,7 @@ public class DriverUnitTest {
   /**
    * Creates the directory structure for the database file and loads the JDBC driver.
    * @param dbFile the database file name
-   * @throws Exception
+   * @throws Exception if a problem occurs
    */
   protected void setupDatabaseFileAndJDBCDriver(String dbFile) throws Exception {
 	 // If the database file already exists, delete it, else create the parent directory for it.    
@@ -77,19 +71,18 @@ public class DriverUnitTest {
 		 }
 	 }    
 	 // Loads and registers the JDBC driver
-	 DriverManager.registerDriver((Driver)(Class.forName(driverName, true, getClass().getClassLoader()).newInstance()));
+	 DriverManager.registerDriver((Driver)(Class.forName(driverName, true, getClass().getClassLoader()).getConstructor().newInstance()));
   }
   
   public Blob selectBlob (Connection con, int key) throws Exception {
     PreparedStatement stmt = con.prepareStatement("SELECT value,key FROM blobtest where key = ?");
     stmt.setInt(1, key);
     ResultSet rs = stmt.executeQuery();
-    assertTrue ("Executed", rs != null);
+	  assertNotNull("Executed", rs);
     rs.next();
     System.err.println ("blob record \"" + rs.getBlob(1).toString() + "\" key " + rs.getString(2) );
     assertTrue (" Only one record ", rs.isLast());
-    Blob b = rs.getBlob(1);
-    return b;
+	  return rs.getBlob(1);
   }
 
   /** Test the serialization of the various value objects. */
@@ -116,7 +109,7 @@ public class DriverUnitTest {
     }
 
     final String stringBlob = "ABlob";
-    /** Some data for the table. */
+    /* Some data for the table. */
     final String[] blobInserts = {
         "INSERT INTO blobtest(key,value) VALUES (101, '"+stringBlob+"')",
         "INSERT INTO blobtest(key,value) VALUES (?, ?)",
@@ -209,7 +202,7 @@ public class DriverUnitTest {
 	  stmt.setString(2, "value");
 	  stmt.setString(3, "value");
 	  rs = stmt.executeQuery();
-	  assertTrue ("Executed", rs != null);
+	  assertNotNull("Executed", rs);
 	  rs.last();
 	  assertEquals("Enough rows ", 4, rs.getRow());
 	  rs.close();
@@ -242,11 +235,11 @@ public class DriverUnitTest {
 
 	  // In the last row, name is null and value is 500.
 	  rs.last();
-	  assertEquals("Name in the last row using column name", null, rs.getString("name"));
+	  assertNull("Name in the last row using column name", rs.getString("name"));
 	  assertTrue("Current name is not null", rs.wasNull());
 	  assertEquals("Value in the last row using column name", 500, rs.getInt("value"));
 	  assertFalse("Current value is null", rs.wasNull());
-	  assertEquals("Name in the last row using column number", null, rs.getString(1));
+	  assertNull("Name in the last row using column number", rs.getString(1));
 	  assertTrue("Current name is not null", rs.wasNull());
 	  assertEquals("Value in the last row using column number", 500, rs.getInt(2));
 	  assertFalse("Current value is null", rs.wasNull());
@@ -391,7 +384,7 @@ public class DriverUnitTest {
 		assertEquals("Value for aShort", 1, rs.getShort("aShort"));
 		assertEquals("Value for anInt", 10, rs.getInt("anInt"));
 		assertEquals("Value for aLong", 100, rs.getLong("aLong"));
-		assertEquals("Value for aBool", false, rs.getBoolean("aBool"));
+	  assertFalse("Value for aBool", rs.getBoolean("aBool"));
 	
 		// Compare strings to avoid Float precision problems
 		assertEquals("Value for aFloat", "1.0",
@@ -410,7 +403,7 @@ public class DriverUnitTest {
 		assertEquals("Value for aShort", 2, rs.getShort(4));
 		assertEquals("Value for anInt", 20, rs.getInt(5));
 		assertEquals("Value for aLong", 200, rs.getLong(6));
-		assertEquals("Value for aBool", true, rs.getBoolean(7));
+	  assertTrue("Value for aBool", rs.getBoolean(7));
 	
 		// Compare strings to avoid Float precision problems
 		assertEquals("Value for aFloat", "2.0",
@@ -424,13 +417,13 @@ public class DriverUnitTest {
 		rs.next(); // 3rd row
 		// Values for aString, aByte, aShort and aText should be null in this row 
 		assertEquals("Value for id", 3, rs.getInt(1));
-		assertEquals("Value for aString", null, rs.getString(2));
+	  assertNull("Value for aString", rs.getString(2));
 		assertTrue("Current value for aStrnig is not null", rs.wasNull());
-		assertEquals("Value for aByte", null, rs.getString(3));
+	  assertNull("Value for aByte", rs.getString(3));
 		assertTrue("Current value for aByte is not null", rs.wasNull());
-		assertEquals("Value for aShort", null, rs.getString("aShort"));
+	  assertNull("Value for aShort", rs.getString("aShort"));
 		assertTrue("Current value for aShort is not null", rs.wasNull());
-		assertEquals("Value for aText", null, rs.getString("aText"));
+	  assertNull("Value for aText", rs.getString("aText"));
 		assertTrue("Current value for aText is not null", rs.wasNull());	
 	
 		rs.last(); // 5th row
@@ -438,7 +431,7 @@ public class DriverUnitTest {
 		assertEquals("Value for id", 5, rs.getInt(1));
 		assertEquals("Value for aString", "string5", rs.getString(2));
 		assertFalse("Current value is null", rs.wasNull());
-		assertEquals("Value for aBool", true, rs.getBoolean("aBool"));
+	  assertTrue("Value for aBool", rs.getBoolean("aBool"));
 		assertFalse("Current value is null", rs.wasNull());
 	
 		// Compare strings to avoid Float precision problems
@@ -485,7 +478,7 @@ public class DriverUnitTest {
       assertEquals ("Should be -1 ", -1, statement.getUpdateCount());
       assertNotNull ("Result Set should be non-null ", statement.getResultSet());
       // second time this will be true.
-      boolean noMoreResults = ((statement.getMoreResults() == false) && (statement.getUpdateCount() == -1));
+      boolean noMoreResults = ((!statement.getMoreResults()) && (statement.getUpdateCount() == -1));
       assertTrue("Should  be no more results ", noMoreResults);
       assertNull ("Result Set should be non-null ", statement.getResultSet());
       statement.close();      
@@ -495,7 +488,7 @@ public class DriverUnitTest {
       assertNotNull ("Result Set should not be null ", statement.getResultSet());
       assertEquals ("Should not be -1 ", -1, statement.getUpdateCount());
       // second time this will be true.
-      noMoreResults = ((statement.getMoreResults() == false) && (statement.getUpdateCount() == -1));
+      noMoreResults = ((!statement.getMoreResults()) && (statement.getUpdateCount() == -1));
       assertTrue("Should  be no more results ", noMoreResults);
       assertNull ("Result Set should be null - no results ", statement.getResultSet());
       statement.close();
@@ -508,7 +501,7 @@ public class DriverUnitTest {
       assertTrue("Should return a result set", hasResultSet);
       assertEquals ("Should not be -1 ", -1, stmt.getUpdateCount());
       // second time this will be true.
-      noMoreResults = ((stmt.getMoreResults() == false) && (stmt.getUpdateCount() == -1));
+      noMoreResults = ((!stmt.getMoreResults()) && (stmt.getUpdateCount() == -1));
       assertTrue("Should  be no more results ", noMoreResults);
       assertNull ("Result Set should be null ", stmt.getResultSet());  // no more results
       stmt.close();
@@ -519,7 +512,7 @@ public class DriverUnitTest {
       assertNotNull ("Result Set should not be null ", stmt.getResultSet());
       assertEquals ("Should not be -1 ", -1, stmt.getUpdateCount());
       // second time this will be true.
-      noMoreResults = ((stmt.getMoreResults() == false) && (stmt.getUpdateCount() == -1));
+      noMoreResults = ((!stmt.getMoreResults()) && (stmt.getUpdateCount() == -1));
       assertTrue("Should  be no more results ", noMoreResults);
       assertNull ("Result Set should be null - no results ", stmt.getResultSet());
       stmt.close();
@@ -664,7 +657,7 @@ public class DriverUnitTest {
 
     while(rs.next()) {
       int count = rs.getMetaData().getColumnCount();
-      List<String> viewColumnNames =  new ArrayList<String>(Arrays.asList(new String[]{"pastime", "count", "stripcount"}));
+      //List<String> viewColumnNames =  new ArrayList<String>(Arrays.asList(new String[]{"pastime", "count", "stripcount"}));
       for ( int counter = 0 ; counter < count ; counter++ ) {
         System.err.print(" " + rs.getMetaData().getColumnName(counter+1) + " = " + rs.getString(counter+1));
         //        pastime = poker count = 353000000 stripcount = 9230000 percent = 2.61473087818697
@@ -678,7 +671,7 @@ public class DriverUnitTest {
     rs.close();
 
     rs = con.createStatement().executeQuery("SELECT * FROM PASTIMES");
-    List<String> tableColumnNames =  new ArrayList<String>(Arrays.asList(new String[]{"pastime", "count"}));
+    //List<String> tableColumnNames =  new ArrayList<String>(Arrays.asList(new String[]{"pastime", "count"}));
     while(rs.next()) {
       int count = rs.getMetaData().getColumnCount();
       for ( int counter = 0 ; counter < count ; counter++ ) {
@@ -691,7 +684,7 @@ public class DriverUnitTest {
 
     rs.close();
   }
-
+	final static int NO_LOCALIZED_COLLATORS=16;
   @Test
   public void testAutoCommit() throws Exception {  
 	    String dbName = "autocommittest.db";
@@ -701,7 +694,7 @@ public class DriverUnitTest {
         String jdbcURL = JDBC_URL_PREFIX + dbFile;               
  
         Properties removeLocale = new Properties();
-        removeLocale.put(SQLDroidDriver.ADDITONAL_DATABASE_FLAGS, android.database.sqlite.SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+        removeLocale.put(SQLDroidDriver.ADDITONAL_DATABASE_FLAGS, NO_LOCALIZED_COLLATORS);
         Connection conn1 = DriverManager.getConnection(jdbcURL,removeLocale);
         System.out.println("After getting connection...1");
         
@@ -752,7 +745,7 @@ public class DriverUnitTest {
           .execute("create table timestamptest (id integer, created_at timestamp)");
 
       // Make sure timestamp is around noon to check for DateFormat bug
-      Calendar calendar = new GregorianCalendar(2016, 7, 15, 12, 0, 0);
+      Calendar calendar = new GregorianCalendar(2016, Calendar.AUGUST, 15, 12, 0, 0);
       Timestamp timestamp = new Timestamp(calendar.getTimeInMillis() + 853); // make sure millis are included      
       
       int id = 23432;

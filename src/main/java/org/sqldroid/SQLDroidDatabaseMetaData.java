@@ -188,14 +188,14 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
                 "NULLABLE", "REMARKS", "COLUMN_DEF", "SQL_DATA_TYPE", "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH",
                 "ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATLOG", "SCOPE_SCHEMA", "SCOPE_TABLE", "SOURCE_DATA_TYPE",
                 "IS_AUTOINCREMENT"};
-        final Object[] columnValues = new Object[]{null, null, null, null, null, null, null, null, null, Integer.valueOf(10),
-                Integer.valueOf(2) /* columnNullableUnknown */, null, null, null, null, Integer.valueOf(-1), Integer.valueOf(-1), "",
+        final Object[] columnValues = new Object[]{null, null, null, null, null, null, null, null, null, 10,
+				2 /* columnNullableUnknown */, null, null, null, null, -1, -1, "",
                 null, null, null, null, ""};
 
         SQLiteDatabase db = con.getDb();
         final String[] types = new String[]{TABLE_TYPE, VIEW_TYPE};
         ResultSet rs = null;
-        List<Cursor> cursorList = new ArrayList<Cursor>();
+        List<Cursor> cursorList = new ArrayList<>();
         try {
             rs = getTables(catalog, schemaPattern, tableNamePattern, types);
             while (rs.next()) {
@@ -231,9 +231,9 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
                         //public static final int columnNullable  1
                         //public static final int columnNullableUnknown   2
                         if (nullable == 0) {
-                            column[10] = Integer.valueOf(1);
+                            column[10] = 1;
                         } else if (nullable == 1) {
-                            column[10] = Integer.valueOf(0);
+                            column[10] = 0;
                         }
                         column[12] = c.getString(4);  // we should check the type for this, but I'm not going to.
                         mc.addRow(column);
@@ -287,15 +287,14 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
             return getImportedKeys(pc, ps, pt);
         }
 
-        StringBuilder query = new StringBuilder();
-        query.append("select ").append(quote(pc)).append(" as PKTABLE_CAT, ")
-                .append(quote(ps)).append(" as PKTABLE_SCHEM, ").append(quote(pt)).append(" as PKTABLE_NAME, ")
-                .append("'' as PKCOLUMN_NAME, ").append(quote(fc)).append(" as FKTABLE_CAT, ")
-                .append(quote(fs)).append(" as FKTABLE_SCHEM, ").append(quote(ft)).append(" as FKTABLE_NAME, ")
-                .append("'' as FKCOLUMN_NAME, -1 as KEY_SEQ, 3 as UPDATE_RULE, 3 as DELETE_RULE, '' as FK_NAME, '' as PK_NAME, ")
-                .append(Integer.toString(importedKeyInitiallyDeferred)).append(" as DEFERRABILITY limit 0 ");
+		String query = "select " + quote(pc) + " as PKTABLE_CAT, " +
+				quote(ps) + " as PKTABLE_SCHEM, " + quote(pt) + " as PKTABLE_NAME, " +
+				"'' as PKCOLUMN_NAME, " + quote(fc) + " as FKTABLE_CAT, " +
+				quote(fs) + " as FKTABLE_SCHEM, " + quote(ft) + " as FKTABLE_NAME, " +
+				"'' as FKCOLUMN_NAME, -1 as KEY_SEQ, 3 as UPDATE_RULE, 3 as DELETE_RULE, '' as FK_NAME, '' as PK_NAME, " +
+				Integer.toString(importedKeyInitiallyDeferred) + " as DEFERRABILITY limit 0 ";
 
-        return con.createStatement().executeQuery(query.toString());
+        return con.createStatement().executeQuery(query);
     }
 
     @Override
@@ -431,15 +430,15 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
                 } finally {
                     try {
                         if (rs != null) rs.close();
-                    } catch (SQLException e) {
+                    } catch (SQLException ignored) {
                     }
                     try {
                         if (stat2 != null) stat2.close();
-                    } catch (SQLException e) {
+                    } catch (SQLException ignored) {
                     }
                     try {
                         if (fk != null) fk.close();
-                    } catch (SQLException e) {
+                    } catch (SQLException ignored) {
                     }
                 }
             }
@@ -901,13 +900,12 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
         SQLiteDatabase db = con.getDb();
         List<Cursor> cursorList = new ArrayList<Cursor>();
         for (String tableType : types) {
-            StringBuffer selectString = new StringBuffer();
-            selectString.append(selectStringStart);
-            selectString.append(tableType);
-            selectString.append(selectStringMiddle);
-            selectString.append(tableType);
-            selectString.append(selectStringEnd);
-            Cursor c = db.rawQuery(selectString.toString(), new String[]{
+			String selectString = selectStringStart +
+					tableType +
+					selectStringMiddle +
+					tableType +
+					selectStringEnd;
+            Cursor c = db.rawQuery(selectString, new String[]{
                     tableNamePattern, tableType.toUpperCase(),
                     tableNamePattern, tableType.toUpperCase()});
             cursorList.add(c);
@@ -1459,7 +1457,8 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (isWrapperFor(iface)) {
             return (T) this;
@@ -1552,7 +1551,7 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
     }
 
     /**
-     * @throws SQLException
+     * @throws SQLException if a problem occurs
      */
     private void checkOpen() throws SQLException {
         if (con == null) {
@@ -1571,17 +1570,17 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
         String pkName = null;
 
 		/** The column(s) for the primary key. */
-        String pkColumns[] = null;
+        String[] pkColumns = null;
 
         /**
          * Constructor.
          * @param table The table for which to get find a primary key.
-         * @throws SQLException
+         * @throws SQLException if a problem occurs
          */
         public PrimaryKeyFinder(String table) throws SQLException {
             this.table = table;
 
-            if (table == null || table.trim().length() == 0) {
+            if (table == null || table.trim().isEmpty()) {
                 throw new SQLException("Invalid table name: '" + this.table + "'");
             }
 
@@ -1623,11 +1622,11 @@ public class SQLDroidDatabaseMetaData implements DatabaseMetaData {
             } finally {
                 try {
                     if (rs != null) rs.close();
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
                 try {
                     if (stat != null) stat.close();
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
             }
         }

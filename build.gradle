@@ -1,0 +1,230 @@
+
+apply plugin: 'java-library'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'pmd'
+
+Properties props = new Properties()
+def propFile = new File(project.getProjectDir().getParentFile(), 'credentials.properties')
+def artifactoryUrl="https://artifactory.distri-mind.fr:443/artifactory"
+def artifactoryUser=""
+def artifactoryPwd=""
+def onedevUser = ""
+def onedevPwd = ""
+
+
+if (propFile.canRead())
+{
+    props.load(new FileInputStream(propFile))
+
+
+    if (props!=null && props.containsKey('artifactory_contextUrl'))
+        artifactoryUrl=props.get("artifactory_contextUrl")
+    if (props!=null && props.containsKey('artifactory_user'))
+        artifactoryUser=props.get("artifactory_user")
+    if (props!=null && props.containsKey('artifactory_password'))
+        artifactoryPwd=props.get("artifactory_password")
+    if (props != null && props.containsKey('onedev_user'))
+        onedevUser = props.get("onedev_user")
+    if (props != null && props.containsKey('onedev_password'))
+        onedevPwd = props.get("onedev_password")
+}
+
+
+version='1.0.0-STABLE'
+group='fr.distrimind.oss.asqlconnector'
+
+
+repositories {
+
+
+    maven {
+        url = "${artifactoryUrl}/gradle-release/"
+        if (artifactoryUser != "") {
+            credentials {
+                username = "${artifactoryUser}"
+                password = "${artifactoryPwd}"
+            }
+        }
+    }
+}
+dependencies {
+	compileOnly jlibs.androidStub
+    testImplementation jlibs.junit
+    
+}
+
+def javaVersion=JavaVersion.VERSION_11
+java {
+
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    compileJava.options.compilerArgs.addAll(['--release', sourceCompatibility] as Collection<? extends String>)
+}
+javadoc.options.addStringOption("html5", "-quiet")
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile).tap {
+        configureEach {
+            options.compilerArgs << "-Xlint:unchecked"
+            options.deprecation = true
+        }
+    }
+}
+
+javadoc {
+    options.addBooleanOption('html5', true)
+}
+pmd {
+	consoleOutput = true
+	toolVersion = "7.11.0"
+	rulesMinimumPriority = 5
+	ruleSetFiles = files("../pmd/pmd-rules.xml")
+}
+
+
+def projectName=project.name
+jar {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
+
+    manifest.attributes('Multi-Release': 'false')
+    manifest.attributes('Bundle-Name': jar.archiveBaseName)
+    manifest.attributes('Bundle-SymbolicName': jar.archiveBaseName)
+    manifest.attributes('Bundle-RequiredExecutionEnvironment': 'JavaSE-'+JavaVersion.VERSION_11)
+
+    from('../COPYING') {
+        rename { fileName ->
+            "COPYING-$projectName"
+        }
+    }
+}
+
+
+tasks.register('sourcesJar', Jar) {
+    dependsOn classes
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
+    archiveClassifier.set("sources")
+    from sourceSets.main.allSource
+    from('../COPYING') {
+        rename { fileName ->
+            "COPYING-$projectName"
+        }
+    }
+}
+
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
+    archiveClassifier.set("javadoc")
+    from javadoc.destinationDir
+    from('../COPYING') {
+        rename { fileName ->
+            "COPYING-$projectName"
+        }
+    }
+}
+artifacts {
+    archives jar
+    archives sourcesJar
+    archives javadocJar
+}
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                name = project.name
+                description = 'SQLite JDBC driver for Android'
+                url = 'https://github.com/DistriMind/DM-A-SQLConnector'
+                developers {
+                    developer {
+                        id = 'donv'
+                        name = 'Uwe Kubosch'
+                        email = 'uwe@kubosch.no'
+                        timezone = '+1'
+                        roles.add('Contributor')
+                    }
+                    developer {
+                        id = 'yanaga'
+                        name = 'Edson Yanaga'
+                        email = 'edson@yanaga.me'
+                        timezone = '-3'
+                        roles.add('Contributor')
+                    }
+                    developer {
+                        id = 'jhannes'
+                        name = 'Johannes Brodwall'
+                        email = 'johannes@brodwall.com'
+                        url = 'http://www.johannesbrodwall.com'
+                        timezone = '+1'
+                        roles.add('Contributor')
+                    }
+                    developer {
+                        id = 'jmahdjoub'
+                        name = 'Jason Mahdjoub'
+                        email = 'jason.mahdjoub@distri-mind.fr'
+                        organization = 'DistriMind'
+                        timezone = '+1'
+                        roles.add('Project Lead')
+                    }
+                }
+                organization {
+                    name = 'DistriMind'
+                    url = 'https://github.com/DistriMind'
+                }
+                issueManagement {
+                    system = 'GitHub'
+                    url = 'https://github.com/DistriMind/DM-A-SQLConnector/issues'
+                }
+                scm {
+                    connection = 'scm:git:https://git.distri-mind.fr/DM-A-SQLConnector'
+                    developerConnection = 'scm:git:https://git.distri-mind.fr/DM-A-SQLConnector'
+                    url = 'https://git.distri-mind.fr/DM-A-SQLConnector'
+                }
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://mit-license.org/'
+                    }
+                }
+
+            }
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username = "${artifactoryUser}"
+                password = "${artifactoryPwd}"
+            }
+            url = "${artifactoryUrl}/DistriMind-Public"
+        }
+        maven {
+            credentials {
+                username = "${onedevUser}"
+                password = "${onedevPwd}"
+            }
+            url = 'https://git.distri-mind.fr/DM-A-SQLConnector/~maven'
+        }
+    }
+}
+signing {
+    useGpgCmd()
+    required = {!project.hasProperty('disableSigning')}
+    if (required) {
+        sign configurations.archives
+        sign publishing.publications.mavenJava
+    }
+
+}

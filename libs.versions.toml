@@ -1,0 +1,9 @@
+[versions]
+junitVersion = "4.13.2"
+androidStubVersion = "4.3.0.0"
+
+
+[libraries]
+junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
+androidStub = { group = "stub.android", name = "AndroidStub", version.ref = "androidStubVersion" }
+

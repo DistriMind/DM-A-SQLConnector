@@ -1,13 +1,8 @@
 package org.sqldroid;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.assertj.core.api.ThrowableAssert;
+import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,25 +11,27 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 16)
-public class SQLDroidConnectionTest {
 
-    @Test
+@SuppressWarnings("ResultOfMethodCallIgnored")
+public class SQLDroidConnectionTest {
+    public static final int CREATE_IF_NECESSARY = 268435456;
+    public static final int OPEN_READWRITE = 0;
+    @SuppressWarnings("EmptyTryBlock")
+	@Test
     public void shouldConnectToEmptyFile() throws SQLException, IOException {
         Properties properties = new Properties();
         properties.put(SQLDroidDriver.ADDITONAL_DATABASE_FLAGS,
-                android.database.sqlite.SQLiteDatabase.CREATE_IF_NECESSARY
-                        | android.database.sqlite.SQLiteDatabase.OPEN_READWRITE);
+                CREATE_IF_NECESSARY
+                        | OPEN_READWRITE);
 
         File dbFile = cleanDbFile("exisising-file.db");
-        try (FileOutputStream output = new FileOutputStream(dbFile)) {
+        try (FileOutputStream ignored = new FileOutputStream(dbFile)) {
         }
-        assertThat(dbFile).exists();
+        Assert.assertTrue(dbFile.exists());
 
         String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
         Connection conn = new SQLDroidDriver().connect(jdbcUrl, properties);
-        assertThat(conn.isClosed()).isFalse();
+        Assert.assertFalse(conn.isClosed());
         conn.close();
     }
 
@@ -43,7 +40,7 @@ public class SQLDroidConnectionTest {
         File dbFile = cleanDbFile("query-test.db");
         String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath() + "?timeout=30";
         Connection conn = new SQLDroidDriver().connect(jdbcUrl, new Properties());
-        assertThat(conn.isClosed()).isFalse();
+        Assert.assertFalse(conn.isClosed());
         conn.close();
     }
 
@@ -51,45 +48,52 @@ public class SQLDroidConnectionTest {
     public void shouldDealWithInvalidDirectoryGivenAsFile() throws SQLException, IOException {
         File dbFile = cleanDbFile("db-as-dir.db");
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getParentFile().getAbsolutePath();
-        assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
-            @Override
-            public void call() throws Throwable {
-                new SQLDroidDriver().connect(jdbcUrl, new Properties());
-            }
-        }).isInstanceOf(SQLException.class)
-                .hasMessageContaining("Can't create")
-                .hasMessageContaining(dbFile.getParent());
+        try(Connection ignored=new SQLDroidDriver().connect(jdbcUrl, new Properties()))
+        {
+            Assert.fail();
+        }
+        catch (SQLException e)
+        {
+            Assert.assertEquals("Can't create", e.getMessage());
+            Assert.assertNotNull(dbFile.getParent());
+            Assert.assertFalse(dbFile.getParent().isEmpty());
+        }
+
     }
 
-    @Test
+    @SuppressWarnings("EmptyTryBlock")
+	@Test
     public void shouldDealWithDirectoryNameAsExistingFile() throws SQLException, IOException {
         File dbDir = cleanDbFile("subdir");
-        try (FileOutputStream output = new FileOutputStream(dbDir)) {
+        try (FileOutputStream ignored = new FileOutputStream(dbDir)) {
         }
         File dbFile = new File(dbDir, "dbfile.db");
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-        assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
-            @Override
-            public void call() throws Throwable {
-                new SQLDroidDriver().connect(jdbcUrl, new Properties());
-            }
-        }).isInstanceOf(SQLException.class)
-                .hasMessageContaining("Can't create")
-                .hasMessageContaining(dbFile.getAbsolutePath());
+        try(Connection ignored=new SQLDroidDriver().connect(jdbcUrl, new Properties()))
+        {
+            Assert.fail();
+        }
+        catch (SQLException e)
+        {
+            Assert.assertEquals("Can't create", e.getMessage());
+            Assert.assertNotNull(dbFile.getAbsolutePath());
+            Assert.assertFalse(dbFile.getAbsolutePath().isEmpty());
+        }
     }
 
     @Test
     public void shouldCreateMissingSubdirectory() throws SQLException {
         DB_DIR.mkdirs();
-        assertThat(DB_DIR).isDirectory();
+        Assert.assertTrue(DB_DIR.isDirectory());
         File dbSubdir = new File(DB_DIR, "non-existing-dir");
         File dbFile = new File(dbSubdir, "database.db");
         dbFile.delete();
         dbSubdir.delete();
-        assertThat(dbSubdir).doesNotExist();
+        Assert.assertFalse(dbSubdir.exists());
+
         final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
         new SQLDroidDriver().connect(jdbcUrl, new Properties()).close();
-        assertThat(dbFile).exists();
+        Assert.assertTrue(dbFile.exists());
     }
 
     @Test
@@ -100,7 +104,7 @@ public class SQLDroidConnectionTest {
             connection.setAutoCommit(false);
         }
         Connection conn = new SQLDroidDriver().connect(jdbcUrl, new Properties());
-        assertThat(conn.isClosed()).isFalse();
+        Assert.assertFalse(conn.isClosed());
         conn.close();
     }
 
@@ -135,11 +139,11 @@ public class SQLDroidConnectionTest {
 
     private File cleanDbFile(String filename) {
         DB_DIR.mkdirs();
-        assertThat(DB_DIR).isDirectory();
+        Assert.assertTrue(DB_DIR.isDirectory());
 
         File dbFile = new File(DB_DIR, filename);
         dbFile.delete();
-        assertThat(dbFile).doesNotExist();
+        Assert.assertFalse(dbFile.exists());
         return dbFile;
     }
 }

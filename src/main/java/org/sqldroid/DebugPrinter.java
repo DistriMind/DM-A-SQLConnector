@@ -2,8 +2,8 @@ package org.sqldroid;
 
 /**
  * thanks to 
- * http://blog.taragana.com/index.php/archive/core-java-how-to-get-java-source-code-line-number-file-name-in-code/!
- * 
+ * <a href="http://blog.taragana.com/index.php/archive/core-java-how-to-get-java-source-code-line-number-file-name-in-code/">...</a>!
+ *
  * @author klm
  *
  */

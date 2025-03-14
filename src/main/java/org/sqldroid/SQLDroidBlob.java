@@ -86,7 +86,7 @@ public class SQLDroidBlob implements Blob {
    */
   @Override
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     if ( b == null ) {
       sb.append("Null Blob");
     }

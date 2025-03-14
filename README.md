@@ -8,32 +8,69 @@ SQLDroid lets you access your app's database through JDBC. Android ships with th
 
 The SQLDroid JAR with the JDBC driver for Android is 33KB.  We also offer a RubyGem "sqldroid" for use with [Ruboto](http://ruboto.org/).
 
-## Community
+# How to use it ?
 
-* Project site: https://github.com/SQLDroid/SQLDroid
-* Mailing list: http://groups.google.com/group/sqldroid
-* Wiki: https://github.com/SQLDroid/SQLDroid/wiki
-* Old project site: http://code.google.com/p/sqldroid
+## Download with Gradle :
 
-## Download
+- Adapt into your build.gradle file, the next code (minimum Java version is 11) :
+  ```
+     ...
+     dependencies {
+         ...
+         api(group:'fr.distrimind.oss.util.asqlconnector', name: 'DM-A-SQLConnector', version: '1.0.0-STABLE')
+         ...
+     }
+     ...
+  ```
 
-You can use SQLDroid in you maven project by declaring this dependency:
+- Libraries are available on Maven Central. You can check signatures of dependencies with this [public GPG key](key-2023-10-09.pub). You can also use the next repository :
+   ```
+       ...
+       repositories {
+           ...
+           maven {
+                   url "https://artifactory.distri-mind.fr/ui/native/gradle-release/"
+           }
+           ...
+       }
+       ...
+   ```
 
-```xml
-<dependency>
-    <groupId>org.sqldroid</groupId>
-    <artifactId>sqldroid</artifactId>
-    <version>1.0.3</version>
-</dependency>
-```
+To know what is the last uploaded version, please refer to versions available here : [this repository](https://artifactory.distri-mind.fr/artifactory/DistriMind-Public/fr/distrimind/oss/util)
+## Download with Maven :
+- Adapt into your pom.xml file, the next code (minimum Java version is 11) :
+   ```
+       ...
+       <project>
+           ...
+           <dependencies>
+               ...
+               <dependency>
+                   <groupId>fr.distrimind.oss.asqlconnector</groupId>
+                   <artifactId>DM-A-SQLConnector</artifactId>
+                   <version>1.0.0-STABLE</version>
+               </dependency>  
+               ...
+           </dependencies>
+           ...
+       </project>
+       ...
+   ```
 
-Or if you're using gradle:
-
-```groovy
-compile 'org.sqldroid:sqldroid:1.0.3'
-```
-
-Binary distributions are available for download from the Maven Central Repository: http://search.maven.org/#search%7Cga%7C1%7Csqldroid
+- Libraries are available on Maven Central. You can check signatures of dependencies with this [public GPG key](key-2023-10-09.pub). You can also use the next repository :
+   ```
+       ...
+       <repositories>
+           ...
+           <repository>
+               <id>DistriMind-Public</id>
+               <url>https://artifactory.distri-mind.fr/ui/native/gradle-release/</url>
+           </repository>
+           ...
+       </repositories>
+       ...		
+   ```
+To know what last version has been uploaded, please refer to versions available into [this repository](https://artifactory.distri-mind.fr/artifactory/DistriMind-Public/fr/distrimind/oss/util)
 
 ## Usage
 
@@ -53,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            DriverManager.registerDriver((Driver) Class.forName("org.sqldroid.SQLDroidDriver").newInstance());
+            DriverManager.registerDriver((Driver) Class.forName("org.sqldroid.SQLDroidDriver").getConstructor().newInstance());
         } catch (Exception e) {
             throw new RuntimeException("Failed to register SQLDroidDriver");
         }
@@ -94,32 +131,6 @@ You can turn on resultset dumps like this
     org.sqldroid.SQLDroidResultSet.dump = true;
 
 
+# License
 
-## Building
-
-The SQLDroid JAR file is a straight collection of the compiled classes.  If you have Ruby installed,
-you can generate the JAR using
-
-```rake jar```
-
-To make a gem for use with Ruboto run
-
-```rake gem```
-
-To release the gem to rubygems.org (requires permissions on rubygems.org) run
-
-```rake release```
-
-## Building with mvn
-
-SQLDroid is a normal Maven project. If you have Android 21 installed (`sdkmanager --install platforms;android-21`), you can generate the JAR using
-
-``mvn install``
-
-To release the jar to Maven Central (requires permissions and a [PGP key](https://central.sonatype.org/pages/working-with-pgp-signatures.html)) first tag the release version
-
-``mvn -Prelease release:prepare``
-
-Then deploy the artifact to Maven Central
-
-``mvn -Prelease release:perform``
+This code is free software: you can redistribute it and/or modify it under the terms of the MIT License

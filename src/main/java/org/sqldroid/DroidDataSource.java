@@ -97,7 +97,8 @@ public class DroidDataSource implements DataSource {
       return iface != null && iface.isAssignableFrom(getClass());
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public  <T> T unwrap(Class<T> iface) throws SQLException {
       if (isWrapperFor(iface)) {
         return (T) this;

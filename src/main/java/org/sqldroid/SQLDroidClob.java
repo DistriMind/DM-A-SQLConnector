@@ -27,7 +27,6 @@ import java.sql.SQLException;
  * Methods in the interfaces {@link ResultSet}, {@link CallableStatement}, and {@link PreparedStatement}, such as
  * <code>getClob</code> and <code>setClob</code> allow a programmer to access an SQL <code>CLOB</code> value.
  * In addition, this interface has methods for updating a <code>CLOB</code> value.
- * 
  * Based on ClobImpl from DataNucleus project. Thanks to DataNucleus contributors.
  * @see <a href="https://github.com/datanucleus/datanucleus-rdbms/blob/master/src/main/java/org/datanucleus/store/rdbms/mapping/datastore/ClobImpl.java">ClobImpl from DataNucleus Project</a>
  * 
@@ -35,7 +34,7 @@ import java.sql.SQLException;
 public class SQLDroidClob implements Clob, NClob
 {
     private String string;
-    private long length;
+    private final long length;
 
     /** Reader for the operations that work that way. */
     private StringReader reader;

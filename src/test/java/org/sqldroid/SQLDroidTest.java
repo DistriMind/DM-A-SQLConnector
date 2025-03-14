@@ -1,15 +1,13 @@
 package org.sqldroid;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Connection;
@@ -20,15 +18,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import junit.framework.AssertionFailedError;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 16)
+
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class SQLDroidTest {
 
     // TODO: This should be /data/data/org.sqldroid/databases/ if running on device
@@ -41,8 +37,9 @@ public class SQLDroidTest {
     private static void registerDriver() {
         try {
             DriverManager.registerDriver((Driver) (Class
-                    .forName("org.sqldroid.SQLDroidDriver", true, SQLDroidTest.class.getClassLoader()).newInstance()));
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
+                    .forName("org.sqldroid.SQLDroidDriver", true, SQLDroidTest.class.getClassLoader()).getConstructor().newInstance()));
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException |
+				 NoSuchMethodException | InvocationTargetException e) {
             throw new AssertionFailedError(e.toString());
         }
     }
@@ -80,7 +77,7 @@ public class SQLDroidTest {
                 stmt.setDouble(9, d);
                 stmt.setString(10, text);
                 int rowCount = stmt.executeUpdate();
-                assertThat(rowCount).as("rowCount").isEqualTo(1);
+                Assert.assertEquals(1, rowCount);
             }
             
             
@@ -90,35 +87,55 @@ public class SQLDroidTest {
                 stmt.setInt(1, id);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.next();
-                    
-                    assertThat(string)
-                        .isEqualTo(rs.getString(1)).isEqualTo(rs.getString("aString"))
-                        .isEqualTo(rs.getObject(1)).isEqualTo(rs.getObject("aString"));
-                    assertThat(b)
-                        .isEqualTo(rs.getByte(2)).isEqualTo(rs.getByte("aByte"));
-                    assertThat(s)
-                        .isEqualTo(rs.getShort(3)).isEqualTo(rs.getShort("aShort"))
-                        .isEqualTo((short)rs.getInt(3)).isEqualTo((short)rs.getInt("aShort"));
-                    assertThat(i)
-                        .isEqualTo(rs.getInt(4)).isEqualTo(rs.getInt("anInt"))
-                        .isEqualTo((int)rs.getLong(4)).isEqualTo((int)rs.getLong("anInt"))
-                        .isEqualTo(rs.getObject(4)).isEqualTo(rs.getObject("anInt"));
-                    assertThat(l)
-                        .isEqualTo(rs.getLong(5)).isEqualTo(rs.getLong("aLong"));
-                    assertThat(bool)
-                        .isEqualTo(rs.getBoolean(6)).isEqualTo(rs.getBoolean("aBool"))
-                        .isEqualTo(rs.getInt(6) == 1).isEqualTo(rs.getInt("aBool") == 1)
-                        .isEqualTo((int)rs.getObject(6) == 1);
-                    assertThat(f)
-                        .isEqualTo(rs.getFloat(7)).isEqualTo(rs.getFloat("aFloat"))
-                        .isEqualTo(rs.getObject(7)).isEqualTo(rs.getObject("aFloat"))
-                        .isEqualTo((float)rs.getDouble(7)).isEqualTo((float)rs.getDouble("aFloat"));
-                    assertThat(d)
-                        .isEqualTo(rs.getDouble(8)).isEqualTo(rs.getDouble("aDouble"))
-                        .isEqualTo((double)(Float)rs.getObject(8)); // Is this intended?
-                    assertThat(text)
-                        .isEqualTo(rs.getString(9)).isEqualTo(rs.getString("aText"))
-                        .isEqualTo(rs.getObject(9)).isEqualTo(rs.getObject("aText"));
+                    Assert.assertEquals(string, rs.getString(1));
+                    Assert.assertEquals(string, rs.getString("aString"));
+                    Assert.assertEquals(string, rs.getObject(1));
+                    Assert.assertEquals(string, rs.getObject("aString"));
+
+                    Assert.assertEquals(b, rs.getByte(2));
+                    Assert.assertEquals(b, rs.getByte("aByte"));
+
+                    Assert.assertEquals(s, rs.getShort(3));
+                    Assert.assertEquals(s, rs.getShort("aShort"));
+                    Assert.assertEquals(s, rs.getObject(3));
+                    Assert.assertEquals(s, rs.getObject("aShort"));
+
+                    Assert.assertEquals(i, rs.getInt(4));
+                    Assert.assertEquals(i, rs.getInt("anInt"));
+                    Assert.assertEquals(i, rs.getLong(4));
+                    Assert.assertEquals(i, rs.getLong("anInt"));
+                    Assert.assertEquals(i, rs.getObject(4));
+                    Assert.assertEquals(i, rs.getObject("anInt"));
+
+                    Assert.assertEquals(l, rs.getLong(5));
+                    Assert.assertEquals(l, rs.getLong("aLong"));
+                    Assert.assertEquals(l, rs.getObject(5));
+                    Assert.assertEquals(l, rs.getObject("aLong"));
+
+                    Assert.assertEquals(bool, rs.getBoolean(6));
+                    Assert.assertEquals(bool, rs.getBoolean("aBool"));
+                    Assert.assertEquals(1, rs.getInt(6));
+                    Assert.assertEquals(1, rs.getInt("aBool"));
+                    Assert.assertEquals(1, rs.getObject(6));
+                    Assert.assertEquals(1, rs.getObject("aBool"));
+
+                    Assert.assertEquals(f, rs.getFloat(7), 0.0f);
+                    Assert.assertEquals(f, rs.getFloat("aFloat"), 0.0f);
+                    Assert.assertEquals(f, rs.getDouble(7), 0.0f);
+                    Assert.assertEquals(f, rs.getDouble("aFloat"), 0.0f);
+                    Assert.assertEquals(f, rs.getObject(7));
+                    Assert.assertEquals(f, rs.getObject("aFloat"));
+
+                    Assert.assertEquals(d, rs.getDouble(8), 0.0);
+                    Assert.assertEquals(d, rs.getDouble("aDouble"), 0.0);
+                    Assert.assertEquals(d, rs.getObject(8));
+                    Assert.assertEquals(d, rs.getObject("aDouble"));
+
+                    Assert.assertEquals(text, rs.getString(9));
+                    Assert.assertEquals(text, rs.getString("aText"));
+                    Assert.assertEquals(text, rs.getObject(9));
+                    Assert.assertEquals(text, rs.getObject("aText"));
+
                 }
             }
         }
@@ -139,7 +156,7 @@ public class SQLDroidTest {
                 stmt.setInt(1, id);
                 stmt.setBigDecimal(2, bigDecimal);
                 int rowCount = stmt.executeUpdate();
-                assertThat(rowCount).as("rowCount").isEqualTo(1);
+                Assert.assertEquals(1, rowCount);
             }
 
             String selectStmt = "SELECT aBigDecimal FROM bdTable where id = ?";
@@ -148,8 +165,10 @@ public class SQLDroidTest {
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.next();
 
-                    assertThat(bigDecimal)
-                            .isEqualTo(rs.getBigDecimal(1)).isEqualTo(rs.getBigDecimal("aBigDecimal"));
+                    Assert.assertEquals(bigDecimal, rs.getBigDecimal(1));
+                    Assert.assertEquals(bigDecimal, rs.getBigDecimal("aBigDecimal"));
+                    Assert.assertEquals(bigDecimal, rs.getObject(1));
+                    Assert.assertEquals(bigDecimal, rs.getObject("aBigDecimal"));
                 }
             }
         }
@@ -182,33 +201,38 @@ public class SQLDroidTest {
                 stmt.setInt(1, id);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.next();
-                    
-                    assertThat(rs.getString(1)).isNull();
-                    
-                    assertThat(rs.getByte(2)).isEqualTo((byte)0);
-                    assertThat(rs.wasNull()).isTrue();
-                    
-                    assertThat(rs.getShort(3)).isEqualTo((short)0);
-                    assertThat(rs.wasNull()).isTrue();
-                    
-                    assertThat(rs.getObject(4)).isNull();
-                    assertThat(rs.getInt(4)).isEqualTo(0);
-                    assertThat(rs.wasNull()).isTrue();
-                    
-                    assertThat(rs.getLong(5)).isEqualTo(0);
-                    assertThat(rs.wasNull()).isTrue();
+                    Assert.assertNull(rs.getString(1));
 
-                    assertThat(rs.getBoolean(6)).isEqualTo(false);
-                    assertThat(rs.wasNull()).isTrue();
+                    Assert.assertNull(rs.getObject(2));
+                    Assert.assertEquals(0, rs.getByte(2));
+                    Assert.assertTrue(rs.wasNull());
 
-                    assertThat(rs.getObject(7)).isNull();
-                    assertThat(rs.getFloat(7)).isEqualTo(0.0f);
-                    assertThat(rs.wasNull()).isTrue();
-                    
-                    assertThat(rs.getDouble(8)).isEqualTo(0.0);
-                    assertThat(rs.wasNull()).isTrue();
+                    Assert.assertNull(rs.getObject(3));
+                    Assert.assertEquals(0, rs.getShort(3));
+                    Assert.assertTrue(rs.wasNull());
 
-                    assertThat(rs.getString(9)).isNull();
+                    Assert.assertNull(rs.getObject(4));
+                    Assert.assertEquals(0, rs.getInt(4));
+                    Assert.assertTrue(rs.wasNull());
+
+                    Assert.assertNull(rs.getObject(5));
+                    Assert.assertEquals(0, rs.getLong(5));
+                    Assert.assertTrue(rs.wasNull());
+
+                    Assert.assertNull(rs.getObject(6));
+					Assert.assertFalse(rs.getBoolean(6));
+                    Assert.assertTrue(rs.wasNull());
+
+                    Assert.assertNull(rs.getObject(7));
+                    Assert.assertEquals(0.0f, rs.getFloat(7), 0.0f);
+                    Assert.assertTrue(rs.wasNull());
+
+                    Assert.assertNull(rs.getObject(8));
+                    Assert.assertEquals(0.0, rs.getDouble(8), 0.0);
+                    Assert.assertTrue(rs.wasNull());
+
+                    Assert.assertNull(rs.getObject(9));
+                    Assert.assertNull(rs.getString(9));
                 }
             }
         }
@@ -233,18 +257,12 @@ public class SQLDroidTest {
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.next();
                     Blob blob = rs.getBlob(1);
-                    assertThat(blob.getBytes(0, byteArray.length)).isEqualTo(byteArray);
-                    assertThat(blob.length()).isEqualTo(byteArray.length);
-                    assertThat(blob.getBytes(1, byteArray.length-2))
-                      .hasSize(byteArray.length-2)
-                      .startsWith(byteArray[1])
-                      .endsWith(byteArray[byteArray.length-2]);
-                    assertThat(byteArray)
-                      .containsSubsequence(blob.getBytes(1, byteArray.length-2));
+                    Assert.assertEquals(byteArray, blob.getBytes(0, byteArray.length));
+                    Assert.assertEquals(byteArray.length, blob.length());
+                    Assert.assertEquals(Arrays.copyOfRange(byteArray, 1, byteArray.length-2), blob.getBytes(1, byteArray.length-2));
 
                     Blob blobAsObj = (Blob)rs.getObject(1);
-                    assertThat(blobAsObj.getBytes(0, (int)blobAsObj.length()))
-                      .isEqualTo(byteArray);
+                    Assert.assertEquals(byteArray, blobAsObj.getBytes(0, (int)blobAsObj.length()));
                 }
             }
         }
@@ -258,7 +276,7 @@ public class SQLDroidTest {
 
             long id;
 
-            Calendar calendar = new GregorianCalendar(2016, 7, 15, 12, 0, 0);
+            Calendar calendar = new GregorianCalendar(2016, Calendar.AUGUST, 15, 12, 0, 0);
             Timestamp timestamp = new Timestamp(calendar.getTimeInMillis() + 985);
 
             try (PreparedStatement stmt = conn.prepareStatement("insert into timestamptest (created_at) values (?)",
@@ -275,7 +293,7 @@ public class SQLDroidTest {
                 stmt.setLong(1, id);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.next();
-                    assertThat(rs.getTimestamp(1)).isEqualTo(timestamp);
+                    Assert.assertEquals(timestamp, rs.getTimestamp(1));
                 }
             }
         }
@@ -299,8 +317,7 @@ public class SQLDroidTest {
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.next();
                     Blob blob = rs.getBlob(1);
-                    assertThat(blob.getBytes(0, (int) blob.length()))
-                      .isEqualTo(byteArray);
+                    Assert.assertEquals(byteArray, blob.getBytes(0, (int) blob.length()));
                 }
             }
         }
@@ -326,7 +343,7 @@ public class SQLDroidTest {
                 stmt.setLong(1, id);
                 try(ResultSet rs = stmt.executeQuery()) {
                     rs.next();
-                    assertThat(rs.getString(1)).isEqualTo(randomString);
+                    Assert.assertEquals(randomString, rs.getString(1));
                 }
             }
         }
@@ -339,7 +356,7 @@ public class SQLDroidTest {
 
             long id;
 
-            Calendar calendar = new GregorianCalendar(2016, 7, 15);
+            Calendar calendar = new GregorianCalendar(2016, Calendar.AUGUST, 15);
             Date date = new Date(calendar.getTimeInMillis());
 
             try (PreparedStatement stmt = conn.prepareStatement("insert into datetest (created_at) values (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -355,9 +372,9 @@ public class SQLDroidTest {
                 stmt.setLong(1, id);
                 try(ResultSet rs = stmt.executeQuery()) {
                     rs.next();
-                    assertThat(date)
-                        .isEqualTo(rs.getDate(1)).isEqualTo(rs.getDate("created_at"))
-                        .isEqualTo(new Date(rs.getTimestamp(1).getTime()));
+                    Assert.assertEquals(date, rs.getDate(1));
+                    Assert.assertEquals(date, new Date(rs.getTimestamp(1).getTime()));
+                    Assert.assertEquals(date, rs.getDate("created_at"));
                 }
             }
         }
@@ -372,8 +389,7 @@ public class SQLDroidTest {
             try (PreparedStatement stmt = conn.prepareStatement("SELECT datetimecol FROM datetime_now_test")) {
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.next();
-                    assertThat(rs.getTimestamp("datetimecol").toString())
-                      .matches("20\\d\\d-\\d\\d-\\d\\d.*");
+                    Assert.assertTrue(Pattern.compile("20\\d\\d-\\d\\d-\\d\\d.*").matcher(rs.getTimestamp("datetimecol").toString()).matches());
                 }
             }
         }
@@ -381,16 +397,16 @@ public class SQLDroidTest {
 
     private String createDatabase(String filename) {
         DB_DIR.mkdirs();
-        assertThat(DB_DIR).exists();
+        Assert.assertTrue(DB_DIR.exists());
 
         File dbFile = new File(DB_DIR, filename);
         dbFile.delete();
-        assertThat(dbFile).doesNotExist();
+        Assert.assertFalse(dbFile.exists());
 
         return "jdbc:sqlite:" + dbFile.getAbsolutePath();
     }
     
-    private static Random random = new Random();
+    private static final Random random = new Random(System.currentTimeMillis());
 
     private byte[] randomByteArray() {
         int blobSize = 1000 + random.nextInt(10_000);

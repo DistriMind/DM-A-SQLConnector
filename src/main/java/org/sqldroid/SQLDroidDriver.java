@@ -30,9 +30,9 @@ public class SQLDroidDriver implements java.sql.Driver {
     // TODO(uwe):  Allow jdbc:sqlite: url as well
     public static String sqldroidPrefix = "jdbc:sqldroid:";
     /** Provide compatibility with the SQLite JDBC driver from Xerial: <p> 
-     * http://www.xerial.org/trac/Xerial/wiki/SQLiteJDBC <p>
-     * by allowing the URLs to be jdbc:sqlite:
-     */
+	 * <a href="http://www.xerial.org/trac/Xerial/wiki/SQLiteJDBC">...</a> <p>
+	 * by allowing the URLs to be jdbc:sqlite:
+	 */
     // this used to be "sqlitePrefix" but it looks too similar to sqldroidPrefix
     // making the code hard to read and easy to mistype.
     public static String xerialPrefix = "jdbc:sqlite:";
@@ -52,12 +52,8 @@ public class SQLDroidDriver implements java.sql.Driver {
     @Override
     public boolean acceptsURL(String url) throws SQLException {
 
-        if(url.startsWith(sqldroidPrefix) || url.startsWith(xerialPrefix)) {
-            return true;
-        }
-
-        return false;
-    }
+		return url.startsWith(sqldroidPrefix) || url.startsWith(xerialPrefix);
+	}
 
     @Override
     public Connection connect(String url, Properties info) throws SQLException {

@@ -28,7 +28,7 @@ public class SQLDroidConnection implements Connection {
     * A map to a single instance of a SQLiteDatabase per DB.
     */
     private static final Map<String, SQLiteDatabase> dbMap =
-            new HashMap<String, SQLiteDatabase>();
+			new HashMap<>();
 
     /**
     * A map from a connection to a SQLiteDatabase instance.
@@ -95,7 +95,7 @@ public class SQLDroidConnection implements Connection {
         if ( queryPart > 0 ) {
             dbQname = dbQname.substring(0, queryPart);
             String options = dbQname.substring(queryPart);
-            while (options.length() > 0) {
+            while (!options.isEmpty()) {
                 int optionEnd = options.indexOf('&');
                 if (optionEnd == -1) {
                     optionEnd = options.length();
@@ -153,7 +153,8 @@ public class SQLDroidConnection implements Connection {
         }
     }
 
-    private void ensureDbFileCreation(String dbQname) throws SQLException {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+	private void ensureDbFileCreation(String dbQname) throws SQLException {
         File dbFile = new File(dbQname);
         if (dbFile.isDirectory()) {
             throw new SQLException("Can't create " + dbFile + " - it already exists as a directory");
@@ -280,7 +281,8 @@ public class SQLDroidConnection implements Connection {
         return new SQLDroidDatabaseMetaData(this);
     }
 
-    @Override
+    @SuppressWarnings("MagicConstant")
+	@Override
     public int getTransactionIsolation() throws SQLException {
         return transactionIsolation;
     }
@@ -301,8 +303,10 @@ public class SQLDroidConnection implements Connection {
     @Override
     public boolean isClosed() throws SQLException {
         // assuming that "isOpen" doesn't throw a locked exception..
-        return sqlitedb == null || sqlitedb.getSqliteDatabase() == null ||
-                !sqlitedb.getSqliteDatabase().isOpen();
+		if (sqlitedb != null && sqlitedb.getSqliteDatabase() != null) {
+			sqlitedb.getSqliteDatabase().isOpen();
+		}
+		return true;
     }
 
     @Override
@@ -458,20 +462,12 @@ public class SQLDroidConnection implements Connection {
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        Log.v(" --- Finalize SQLDroid.");
-        if (!isClosed()) {
-            close();
-        }
-        super.finalize();
-    }
-
-    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
       return iface != null && iface.isAssignableFrom(getClass());
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
       if (isWrapperFor(iface)) {
         return (T) this;
@@ -575,12 +571,12 @@ public class SQLDroidConnection implements Connection {
 		int changedRows = -1;
 		try {
 			changedRowsCountStatement = getChangedRowsCountStatement();
-			ResultSet changedRowsCountResultSet = changedRowsCountStatement.executeQuery();
-			if (changedRowsCountResultSet != null && changedRowsCountResultSet.first()) {
-				changedRows = (int) changedRowsCountResultSet.getLong(1);
-				// System.out.println("In SQLDroidConnection.changedRowsCount(), changedRows=" + changedRows);
-			}
-			changedRowsCountResultSet.close();
+			try(ResultSet changedRowsCountResultSet = changedRowsCountStatement.executeQuery()) {
+                if (changedRowsCountResultSet != null && changedRowsCountResultSet.first()) {
+                    changedRows = (int) changedRowsCountResultSet.getLong(1);
+                    // System.out.println("In SQLDroidConnection.changedRowsCount(), changedRows=" + changedRows);
+                }
+            }
 		} catch (SQLException e) {
 			// ignore
 		}
@@ -592,7 +588,7 @@ public class SQLDroidConnection implements Connection {
 	 * by the database when executing an INSERT statement or create a
 	 * new prepare statement and then return that.
 	 *
-	 * @throws SQLException
+	 * @throws SQLException if a problem occurs
 	 */
 	public ResultSet getGeneratedRowIdResultSet() throws SQLException {
 	    if (generatedRowIdStatement == null) {
@@ -605,7 +601,7 @@ public class SQLDroidConnection implements Connection {
     /**
      * @return A cached prepare statement for the count of changed rows or create one and return that.
      *
-     * @throws SQLException
+     * @throws SQLException if a problem occurs
      */
     private PreparedStatement getChangedRowsCountStatement() throws SQLException {
         if (changedRowsCountStatement == null) {

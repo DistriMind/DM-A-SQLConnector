@@ -19,7 +19,6 @@ public class SQLDroidStatement implements Statement {
 
   /** The update count.  We don't know this, but need to respond in such a way that:
    * (from getMoreResults) There are no more results when the following is true:
-   *
    *      // stmt is a Statement object
    *      ((stmt.getMoreResults() == false) &amp;&amp; (stmt.getUpdateCount() == -1))
 
@@ -79,7 +78,7 @@ public class SQLDroidStatement implements Statement {
   }
 
   @Override
-  /** Execute the SQL statement.
+  /* Execute the SQL statement.
    * @return false if there are no result (if the request was not a select or similar).  True if a
    * result set is available.  This meets the requirement of java.sql.Statement.
    */
@@ -102,9 +101,7 @@ public class SQLDroidStatement implements Statement {
       updateCount = sqldroidConnection.changedRowsCount();
     }
 
-    boolean resultSetAvailable = (rs != null);
-
-    return resultSetAvailable;
+	  return (rs != null);
   }
 
   @Override
@@ -310,6 +307,7 @@ public class SQLDroidStatement implements Statement {
     return iface != null && iface.isAssignableFrom(getClass());
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
     if (isWrapperFor(iface)) {
