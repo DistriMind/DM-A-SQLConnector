@@ -246,7 +246,6 @@ public class ASQLConnectorTest2 {
 	}
 
 	@Test
-	@Ignore("TODO This seems to have been broken by c6a59b700c81c223936f2d38aef13d42cf1f91ca to fix #24")
 	public void shouldRetrieveSavedStringAsBlob() throws SQLException {
 		conn.createStatement().execute("CREATE TABLE stringblobtest (value TEXT)");
 
@@ -262,7 +261,7 @@ public class ASQLConnectorTest2 {
 			try (ResultSet rs = stmt.executeQuery()) {
 				rs.next();
 				Blob blob = rs.getBlob(1);
-				Assert.assertEquals(byteArray, blob.getBytes(1, (int) blob.length()));
+				Assert.assertArrayEquals(byteArray, blob.getBytes(1, (int) blob.length()));
 			}
 		}
 	}
