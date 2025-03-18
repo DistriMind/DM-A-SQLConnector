@@ -10,7 +10,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class DriverUnitTest {
+public class AndroidDriverUnitTest {
 
 	final static int NO_LOCALIZED_COLLATORS = 16;
 	/**
