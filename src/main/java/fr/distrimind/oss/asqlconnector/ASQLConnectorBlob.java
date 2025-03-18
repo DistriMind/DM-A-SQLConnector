@@ -17,29 +17,35 @@ public class ASQLConnectorBlob implements Blob {
 	
 	@Override
 	public InputStream getBinaryStream() throws SQLException {
-		return getBinaryStream(0, b.length);
+		return getBinaryStream(1L, b.length);
 	}
 
 	@Override
   public InputStream getBinaryStream(long pos, long length) throws SQLException {
-  	return new ByteArrayInputStream(b, (int)pos, (int)length);
+  	return new ByteArrayInputStream(b, (int)(pos-1L), (int)length);
   }
 
   @Override
 	public byte[] getBytes(long pos, int length) throws SQLException {
-    if (pos < 0) {
+    if (pos <= 0) {
       throw new SQLException("pos must be > 0");
     }
     if (length < 0) {
       throw new SQLException("length must be > 0");
     }
-    if (pos > 0 || length < b.length) {
+    int l=(int)(b.length-pos+1);
+      if (length > l) {
+          throw new SQLException("length must be <= "+l);
+      }
+    if (pos > 1 || length < b.length) {
       byte[] tmp = new byte[length];
-      System.arraycopy(b, (int)pos, tmp, 0, length);
+      System.arraycopy(b, (int)(pos-1L), tmp, 0, length);
       return tmp;
     }
 		return b;
 	}
+
+
 
 	@Override
 	public long length() throws SQLException {

@@ -495,7 +495,7 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 
   @Override
   public void setBigDecimal(int parameterIndex, BigDecimal theBigDecimal) throws SQLException {
-    setObject(parameterIndex, theBigDecimal.toString());
+    setObject(parameterIndex, Utils.bigDecimalToBytes(theBigDecimal));
   }
 
   /**
@@ -517,9 +517,8 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
     }
     final int bufferSize = 8192;
     byte[] buffer = new byte[bufferSize];
-    ByteArrayOutputStream outputStream = null;
-    try {
-      outputStream = new ByteArrayOutputStream();
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
       int bytesRemaining = length;
       int bytesRead;
       int maxReadSize;
@@ -533,7 +532,6 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
         bytesRemaining = bytesRemaining - bytesRead;
       }
       setBytes(parameterIndex, outputStream.toByteArray());
-      outputStream.close();
     } catch (IOException e) {
       throw new SQLException(e.getMessage());
     }
@@ -542,7 +540,7 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
   @Override
   public void setBlob(int parameterIndex, Blob theBlob) throws SQLException {
     ensureCap(parameterIndex);
-    setObj(parameterIndex, theBlob.getBytes(1, (int)theBlob.length()));
+    setObj(parameterIndex, Utils.getTypedBytesArray(theBlob));
   }
 
   @Override
@@ -561,7 +559,7 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
   @Override
   public void setBytes(int parameterIndex, byte[] theBytes) throws SQLException {
     ensureCap(parameterIndex);
-    setObj(parameterIndex, theBytes);
+    setObj(parameterIndex, Utils.getTypedBytesArray(theBytes));
   }
 
   @Override

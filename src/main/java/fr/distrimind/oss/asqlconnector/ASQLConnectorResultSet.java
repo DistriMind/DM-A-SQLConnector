@@ -170,8 +170,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 
   @Override
   public BigDecimal getBigDecimal(int colID) throws SQLException {
-    String s = getString(colID);
-    return s != null ? new BigDecimal(s) : null;
+    return Utils.bigDecimalFromBytes(getBytesImpl(colID));
   }
 
   @Override
@@ -181,8 +180,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 
   @Override
   public BigDecimal getBigDecimal(int colID, int scale) throws SQLException {
-    String s = getString(colID);
-    return s != null ? new BigDecimal(s, new MathContext(scale)) : null;
+    return Utils.bigDecimalFromBytes(getBytesImpl(colID)).setScale(scale);
   }
 
   @Override
@@ -257,13 +255,23 @@ public class ASQLConnectorResultSet implements ResultSet {
             byte [] bytes = c.getBlob(ci(index));
             // SQLite includes the zero-byte at the end for Strings.
             if (ASQLConnectorResultSetMetaData.getType(c, ci(index)) == 3) { //  Cursor.FIELD_TYPE_STRING
-		        bytes = Arrays.copyOf(bytes, bytes.length - 1);
+		        return Arrays.copyOf(bytes, bytes.length - 1);
             }
-            return bytes;
+            else
+              return Utils.getUntypedBytesArray(bytes);
         } catch (android.database.SQLException e) {
             throw ASQLConnectorConnection.chainException(e);
         }
     }
+
+  private byte[] getBytesImpl(int index) throws SQLException {
+    try {
+      lastColumnRead = index;
+      return c.getBlob(ci(index));
+    } catch (android.database.SQLException e) {
+      throw ASQLConnectorConnection.chainException(e);
+    }
+  }
 
   @Override
   public byte[] getBytes(String columnName) throws SQLException {
@@ -321,7 +329,7 @@ public class ASQLConnectorResultSet implements ResultSet {
           date = new Date(getLong(index));
           break;
         case Types.DATE:
-          date = new Date(getDate(index).getTime());
+          date = new Date(getTimestamp(index).getTime());
           break;
         default:
           // format 2011-07-11 11:36:30.009
@@ -442,10 +450,22 @@ public class ASQLConnectorResultSet implements ResultSet {
     public Object getObject(int colID) throws SQLException {
         lastColumnRead = colID;
         int newIndex = ci(colID);
+      android.util.Log.i("testASQL", ""+ASQLConnectorResultSetMetaData.getType(c, newIndex));
         switch(ASQLConnectorResultSetMetaData.getType(c, newIndex)) {
             case 4: // Cursor.FIELD_TYPE_BLOB:
                 //CONVERT TO BYTE[] OBJECT
-                return new ASQLConnectorBlob(c.getBlob(newIndex));
+            {
+              byte[] t=c.getBlob(newIndex);
+              switch (t[0])
+              {
+                case ASLConnectorBytesArrayType.NULL_TYPE:
+                  return null;
+                case ASLConnectorBytesArrayType.BIG_DECIMAL_TYPE:
+                  return Utils.bigDecimalFromBytes(t);
+                default:
+                  return new ASQLConnectorBlob(Utils.getUntypedBytesArray(t));
+              }
+            }
             case 2: // Cursor.FIELD_TYPE_FLOAT:
                 return c.getFloat(newIndex);
             case 1: // Cursor.FIELD_TYPE_INTEGER:
@@ -455,6 +475,7 @@ public class ASQLConnectorResultSet implements ResultSet {
             case 0: // Cursor.FIELD_TYPE_NULL:
                 return null;
             default:
+
                 return c.getString(newIndex);
         }
     }

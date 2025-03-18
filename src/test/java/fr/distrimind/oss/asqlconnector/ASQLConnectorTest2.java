@@ -241,12 +241,12 @@ public class ASQLConnectorTest2 {
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.next();
                 Blob blob = rs.getBlob(1);
-                Assert.assertEquals(byteArray, blob.getBytes(0, byteArray.length));
+                Assert.assertArrayEquals(byteArray, blob.getBytes(1, byteArray.length));
                 Assert.assertEquals(byteArray.length, blob.length());
-                Assert.assertEquals(Arrays.copyOfRange(byteArray, 1, byteArray.length-2), blob.getBytes(1, byteArray.length-2));
+                Assert.assertArrayEquals(Arrays.copyOfRange(byteArray, 1, byteArray.length-2), blob.getBytes(2, byteArray.length-3));
                 
                 Blob blobAsObj = (Blob)rs.getObject(1);
-                Assert.assertEquals(byteArray, blobAsObj.getBytes(0, (int)blobAsObj.length()));
+                Assert.assertArrayEquals(byteArray, blobAsObj.getBytes(1, (int)blobAsObj.length()));
             }
         }
     }
@@ -268,7 +268,7 @@ public class ASQLConnectorTest2 {
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.next();
                 Blob blob = rs.getBlob(1);
-                Assert.assertEquals(byteArray, blob.getBytes(0, (int)blob.length()));
+                Assert.assertEquals(byteArray, blob.getBytes(1, (int)blob.length()));
             }
         }
       }
