@@ -51,6 +51,7 @@ public class ASQLConnectorException extends java.sql.SQLException {
 		return sqlException.getStackTrace();
 	}
 
+	@SuppressWarnings("CallToPrintStackTrace")
 	@Override
 	public void printStackTrace() {
 		sqlException.printStackTrace();

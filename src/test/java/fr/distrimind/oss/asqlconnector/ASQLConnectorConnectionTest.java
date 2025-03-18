@@ -43,7 +43,7 @@ public class ASQLConnectorConnectionTest {
 		}
 		Assert.assertTrue(dbFile.exists());
 
-		String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+		String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 		Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, properties);
 		Assert.assertFalse(conn.isClosed());
 		conn.close();
@@ -52,7 +52,7 @@ public class ASQLConnectorConnectionTest {
 	@Test
 	public void shouldSupportQueryPartOfURL() throws SQLException, IOException {
 		File dbFile = cleanDbFile("query-test.db");
-		String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath() + "?timeout=30";
+		String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath() + "?timeout=30";
 		Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
 		Assert.assertFalse(conn.isClosed());
 		conn.close();
@@ -61,7 +61,7 @@ public class ASQLConnectorConnectionTest {
 	@Test
 	public void shouldDealWithInvalidDirectoryGivenAsFile() throws SQLException, IOException {
 		File dbFile = cleanDbFile("db-as-dir.db");
-		final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 		try (Connection ignored = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
 			Assert.assertTrue(dbFile.exists());
 			Assert.assertTrue(dbFile.isFile());
@@ -81,7 +81,7 @@ public class ASQLConnectorConnectionTest {
         /*try (FileOutputStream ignored = new FileOutputStream(dbDir)) {
         }*/
 		File dbFile = new File(dbDir, "dbfile.db");
-		final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 		try (Connection ignored = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
 			Assert.assertTrue(dbFile.exists());
 			Assert.assertTrue(dbFile.isFile());

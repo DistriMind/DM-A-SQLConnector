@@ -336,8 +336,8 @@ public class ASQLConnectorResultSet implements ResultSet {
 						SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
 						java.util.Date parsedDate = dateFormat.parse(getString(index));
 						date = new Date(parsedDate.getTime());
-					} catch (Exception any) {
-						any.printStackTrace();
+					} catch (Exception e) {
+						Log.e("Impossible to parse date", e);
 					}
 					break;
 

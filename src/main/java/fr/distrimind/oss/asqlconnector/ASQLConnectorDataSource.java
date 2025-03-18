@@ -37,14 +37,15 @@ public class ASQLConnectorDataSource implements DataSource {
 			throws SQLException {
 		return getConnection();
 	}
-
+	private static final String logFileName="asqlconnector.log";
 	@Override
 	public PrintWriter getLogWriter() throws SQLException {
 		PrintWriter logWriter = null;
+
 		try {
-			logWriter = new PrintWriter("droid.log");
+			logWriter = new PrintWriter(logFileName);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			Log.e("File "+logFileName+" not found", e);
 		}
 		return logWriter;
 	}
@@ -52,9 +53,9 @@ public class ASQLConnectorDataSource implements DataSource {
 	@Override
 	public void setLogWriter(PrintWriter out) throws SQLException {
 		try {
-			DriverManager.setLogWriter(new PrintWriter("droid.log"));
+			DriverManager.setLogWriter(new PrintWriter(logFileName));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			Log.e("File "+logFileName+" not found", e);
 		}
 	}
 

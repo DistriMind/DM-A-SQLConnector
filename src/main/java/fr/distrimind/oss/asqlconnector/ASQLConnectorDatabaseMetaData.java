@@ -257,7 +257,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 						mc.addRow(column);
 					}
 					cursorList.add(mc);
-				} catch (SQLException e) {
+				} catch (SQLException ignored) {
 					// failure of one query will no affect the others...
 					// this will already have been printed.  e.printStackTrace();
 				} finally {
@@ -271,7 +271,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				try {
 					rs.close();
 				} catch (Exception e) {
-					e.printStackTrace();
+					Log.e("Impossible to close result set", e);
 				}
 			}
 		}

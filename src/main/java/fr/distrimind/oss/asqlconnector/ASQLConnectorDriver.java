@@ -46,7 +46,7 @@ public class ASQLConnectorDriver implements java.sql.Driver {
 		try {
 			java.sql.DriverManager.registerDriver(new ASQLConnectorDriver());
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.e("Impossible to load DM-A-SQLConnector driver", e);
 		}
 
 	}
