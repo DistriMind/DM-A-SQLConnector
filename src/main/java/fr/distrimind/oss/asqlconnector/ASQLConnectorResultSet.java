@@ -465,7 +465,6 @@ public class ASQLConnectorResultSet implements ResultSet {
 	public Object getObject(int colID) throws SQLException {
 		lastColumnRead = colID;
 		int newIndex = ci(colID);
-		android.util.Log.i("testASQL", "" + ASQLConnectorResultSetMetaData.getType(c, newIndex));
 		switch (ASQLConnectorResultSetMetaData.getType(c, newIndex)) {
 			case 4: // Cursor.FIELD_TYPE_BLOB:
 				//CONVERT TO BYTE[] OBJECT
