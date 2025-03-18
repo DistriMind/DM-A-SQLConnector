@@ -1,0 +1,47 @@
+
+
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace = 'fr.distrimind.oss.asqlconnector'
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId "fr.distrimind.oss.asqlconnector"
+        minSdk = 26
+        targetSdk = 35
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        androidTest.java.srcDirs += '../../src/test/java'
+        androidTest.resources.srcDirs += '../../src/test/resources'
+        main.java.srcDirs += '../../src/main/java'
+        main.resources.srcDirs += '../src/main/resources'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+}
+
+dependencies {
+
+    testImplementation jlibs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+    androidTestImplementation libs.support.v4
+
+}

@@ -1,0 +1,58 @@
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    Properties props = new Properties()
+    def propFile = new File('../../credentials.properties')
+    def artifactoryUrl="https://artifactory.distri-mind.fr:443/artifactory"
+    def artifactoryUser=""
+    def artifactoryPwd=""
+    def onedevUser=""
+    def onedevPwd=""
+
+    if (propFile.canRead())
+    {
+        props.load(new FileInputStream(propFile))
+
+
+        if (props!=null && props.containsKey('artifactory_contextUrl'))
+            artifactoryUrl=props.get("artifactory_contextUrl")
+        if (props!=null && props.containsKey('artifactory_user'))
+            artifactoryUser=props.get("artifactory_user")
+        if (props!=null && props.containsKey('artifactory_password'))
+            artifactoryPwd=props.get("artifactory_password")
+        if (props!=null && props.containsKey('onedev_user'))
+            onedevUser=props.get("onedev_user")
+        if (props!=null && props.containsKey('onedev_password'))
+            onedevPwd=props.get("onedev_password")
+    }
+    else
+        println "cannot read "+propFile
+    versionCatalogs {
+        jlibs {
+            from(files("../libs.versions.toml"))
+        }
+    }
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+
+rootProject.name = "AndroidTestProject"
+include ':app'
+
+
+
