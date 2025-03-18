@@ -532,7 +532,7 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 	@Override
 	public void setBoolean(int parameterIndex, boolean theBoolean) throws SQLException {
 		ensureCap(parameterIndex);
-		setObj(parameterIndex, theBoolean);
+		setObj(parameterIndex, theBoolean?(short)1:(short)0);
 
 	}
 

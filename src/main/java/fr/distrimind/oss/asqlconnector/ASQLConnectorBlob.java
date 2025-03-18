@@ -46,6 +46,10 @@ public class ASQLConnectorBlob implements Blob {
 	}
 
 
+	public byte[] getBytes() {
+		return b;
+	}
+
 	@Override
 	public long length() throws SQLException {
 		return b.length;

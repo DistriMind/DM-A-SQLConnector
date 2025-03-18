@@ -132,7 +132,7 @@ public class DriverUnitTest {
 		stmt.execute();
 		b = selectBlob(con, blobSize);
 		assertEquals(" Correct Length ", blobSize, b.length());
-		byte[] bytes = b.getBytes(0, blobSize);
+		byte[] bytes = b.getBytes(1, blobSize);
 		for (int counter = 0; counter < blobSize; counter++) {
 			assertEquals(" Blob Element " + counter, (counter % 10), bytes[counter]);
 		}
@@ -143,7 +143,7 @@ public class DriverUnitTest {
 		stmt.execute();
 		b = selectBlob(con, blobSize1);
 		assertEquals(" Correct 1 Length ", blobSize1, b.length());
-		byte[] bytes1 = b.getBytes(0, blobSize1);
+		byte[] bytes1 = b.getBytes(1, blobSize1);
 		for (int counter = 0; counter < blobSize1; counter++) {
 			assertEquals(" Blob1 Element " + counter, (counter % 10 + 0x30), bytes1[counter]);
 		}
@@ -153,7 +153,7 @@ public class DriverUnitTest {
 		stmt.execute();
 		b = selectBlob(con, 401);
 		assertEquals(" Correct Length ", blobSize, b.length());
-		bytes = b.getBytes(0, blobSize);
+		bytes = b.getBytes(1, blobSize);
 		for (int counter = 0; counter < blobSize; counter++) {
 			assertEquals(" Blob Element " + counter, (counter % 10), bytes[counter]);
 		}

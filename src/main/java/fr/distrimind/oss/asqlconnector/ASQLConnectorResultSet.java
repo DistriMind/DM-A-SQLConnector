@@ -220,7 +220,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	public boolean getBoolean(int index) throws SQLException {
 		try {
 			lastColumnRead = index;
-			return c.getInt(ci(index)) != 0;
+			return c.getShort(ci(index)) != 0;
 		} catch (android.database.SQLException e) {
 			throw ASQLConnectorConnection.chainException(e);
 		}
@@ -481,9 +481,9 @@ public class ASQLConnectorResultSet implements ResultSet {
 				}
 			}
 			case 2: // Cursor.FIELD_TYPE_FLOAT:
-				return c.getFloat(newIndex);
+				return c.getDouble(newIndex);
 			case 1: // Cursor.FIELD_TYPE_INTEGER:
-				return c.getInt(newIndex);
+				return c.getLong(newIndex);
 			case 3: // Cursor.FIELD_TYPE_STRING:
 				return c.getString(newIndex);
 			case 0: // Cursor.FIELD_TYPE_NULL:
@@ -619,15 +619,15 @@ public class ASQLConnectorResultSet implements ResultSet {
 					return new Timestamp(getDate(index).getTime());
 				default:
 					// format 2011-07-11 11:36:30.009 OR 2011-07-11 11:36:30
-					SimpleDateFormat dateFormat = new SimpleDateFormat(TIMESTAMP_PATTERN);
-					SimpleDateFormat dateFormatNoMillis = new SimpleDateFormat(TIMESTAMP_PATTERN_NO_MILLIS);
+					SimpleDateFormat timeStampFormat = new SimpleDateFormat(TIMESTAMP_PATTERN);
+					SimpleDateFormat timeStampFormatNoMillis = new SimpleDateFormat(TIMESTAMP_PATTERN_NO_MILLIS);
 					try {
-						return new Timestamp(dateFormat.parse(getString(index)).getTime());
+						return new Timestamp(timeStampFormat.parse(getString(index)).getTime());
 					} catch (ParseException e) {
 						try {
-							return new Timestamp(dateFormatNoMillis.parse(getString(index)).getTime());
+							return new Timestamp(timeStampFormatNoMillis.parse(getString(index)).getTime());
 						} catch (ParseException e1) {
-							throw new SQLException(e.toString());
+							return new Timestamp(getDate(index).getTime());
 						}
 					}
 			}

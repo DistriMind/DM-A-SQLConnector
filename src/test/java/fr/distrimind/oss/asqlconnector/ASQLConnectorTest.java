@@ -90,15 +90,15 @@ public class ASQLConnectorTest {
 
 					Assert.assertEquals(s, rs.getShort(3));
 					Assert.assertEquals(s, rs.getShort("aShort"));
-					Assert.assertEquals((int) s, rs.getObject(3));
-					Assert.assertEquals((int) s, rs.getObject("aShort"));
+					Assert.assertEquals((long) s, rs.getObject(3));
+					Assert.assertEquals((long) s, rs.getObject("aShort"));
 
 					Assert.assertEquals(i, rs.getInt(4));
 					Assert.assertEquals(i, rs.getInt("anInt"));
 					Assert.assertEquals(i, rs.getLong(4));
 					Assert.assertEquals(i, rs.getLong("anInt"));
-					Assert.assertEquals(i, rs.getObject(4));
-					Assert.assertEquals(i, rs.getObject("anInt"));
+					Assert.assertEquals((long)i, rs.getObject(4));
+					Assert.assertEquals((long)i, rs.getObject("anInt"));
 
 					Assert.assertEquals(l, rs.getLong(5));
 					Assert.assertEquals(l, rs.getLong("aLong"));
@@ -107,20 +107,22 @@ public class ASQLConnectorTest {
 
 					Assert.assertEquals(bool, rs.getBoolean(6));
 					Assert.assertEquals(bool, rs.getBoolean("aBool"));
-					Assert.assertEquals(1, rs.getInt(6));
-					Assert.assertEquals(1, rs.getInt("aBool"));
-					Assert.assertEquals(1, rs.getObject(6));
-					Assert.assertEquals(1, rs.getObject("aBool"));
+					Assert.assertEquals(0, rs.getInt(6));
+					Assert.assertEquals(0, rs.getInt("aBool"));
+					Assert.assertEquals(0L, rs.getObject(6));
+					Assert.assertEquals(0L, rs.getObject("aBool"));
 
 					Assert.assertEquals(f, rs.getFloat(7), 0.0f);
 					Assert.assertEquals(f, rs.getFloat("aFloat"), 0.0f);
 					Assert.assertEquals(f, rs.getDouble(7), 0.0f);
 					Assert.assertEquals(f, rs.getDouble("aFloat"), 0.0f);
-					Assert.assertEquals(f, rs.getObject(7));
-					Assert.assertEquals(f, rs.getObject("aFloat"));
+					Assert.assertEquals((double)f, rs.getObject(7));
+					Assert.assertEquals((double)f, rs.getObject("aFloat"));
 
 					Assert.assertEquals(d, rs.getDouble(8), 0.0);
 					Assert.assertEquals(d, rs.getDouble("aDouble"), 0.0);
+					Assert.assertEquals((float)d, rs.getFloat(8), 0.0);
+					Assert.assertEquals((float)d, rs.getFloat("aDouble"), 0.0);
 					Assert.assertEquals(d, rs.getObject(8));
 					Assert.assertEquals(d, rs.getObject("aDouble"));
 
