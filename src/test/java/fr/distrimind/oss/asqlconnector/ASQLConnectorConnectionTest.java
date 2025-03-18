@@ -103,7 +103,7 @@ public class ASQLConnectorConnectionTest {
 		dbSubdir.delete();
 		Assert.assertFalse(dbSubdir.exists());
 
-		final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 		new ASQLConnectorDriver().connect(jdbcUrl, new Properties()).close();
 		Assert.assertTrue(dbFile.exists());
 	}
@@ -111,7 +111,7 @@ public class ASQLConnectorConnectionTest {
 	@Test
 	public void shouldSupportReconnectAfterAbortedTransaction() throws SQLException, IOException {
 		File dbFile = cleanDbFile("aborted-transaction.db");
-		final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 
 		Connection conn;
 		try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
@@ -131,7 +131,7 @@ public class ASQLConnectorConnectionTest {
 	@Test
 	public void shouldAllowNewTransactionAfterCommit() throws SQLException, IOException {
 		File dbFile = cleanDbFile("transaction.db");
-		final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 		try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
 			connection.setAutoCommit(false);
 			connection.commit();
@@ -147,7 +147,7 @@ public class ASQLConnectorConnectionTest {
 	@Test
 	public void shouldAllowMultipleConnections() throws SQLException, IOException {
 		File dbFile = cleanDbFile("multiconnect.db");
-		final String jdbcUrl = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 		Connection connection1 = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
 		Connection connection2 = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
 		connection1.close();

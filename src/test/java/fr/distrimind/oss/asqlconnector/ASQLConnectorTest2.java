@@ -376,7 +376,7 @@ public class ASQLConnectorTest2 {
 		dbFile.delete();
 		Assert.assertFalse(dbFile.exists());
 
-		return "jdbc:sqlite:" + dbFile.getAbsolutePath();
+		return "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 	}
 
 	private byte[] randomByteArray() {

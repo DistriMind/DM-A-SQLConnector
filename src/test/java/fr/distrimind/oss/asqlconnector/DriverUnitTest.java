@@ -20,7 +20,7 @@ public class DriverUnitTest {
 	/**
 	 * Common prefix for creating JDBC URL
 	 */
-	protected String JDBC_URL_PREFIX = "jdbc:sqlite:";
+	protected String JDBC_URL_PREFIX = "jdbc:asqlconnector:";
 	/**
 	 * Package name of this app
 	 */
