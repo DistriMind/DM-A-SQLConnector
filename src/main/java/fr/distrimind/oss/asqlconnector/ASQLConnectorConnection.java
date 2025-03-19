@@ -75,14 +75,16 @@ public class ASQLConnectorConnection implements Connection {
 
 		// if there's a query part, we accept "timeout=xxx" and "retry=yyy"
 		if (queryPart > 0) {
+			String options = dbQname.substring(queryPart).trim();
 			dbQname = dbQname.substring(0, queryPart);
-			String options = dbQname.substring(queryPart);
 			while (!options.isEmpty()) {
-				int optionEnd = options.indexOf('&');
+				int optionEnd = options.lastIndexOf('&');
 				if (optionEnd == -1) {
 					optionEnd = options.length();
 				}
 				int equals = options.lastIndexOf('=', optionEnd);
+				if (equals==-1)
+					Log.e("Error Parsing URL \"" + url);
 				String optionName = options.substring(0, equals).trim();
 				String optionValueString = options.substring(equals + 1, optionEnd).trim();
 				long optionValue;
@@ -99,6 +101,8 @@ public class ASQLConnectorConnection implements Connection {
 					// print and ignore
 					Log.e("Error Parsing URL \"" + url + "\" Timeout String \"" + optionValueString + "\" is not a valid long", nfe);
 				}
+				if (optionEnd==options.length())
+					break;
 				options = options.substring(optionEnd + 1);
 			}
 		}
