@@ -242,7 +242,7 @@ public class ASQLConnectorTest {
 			final int value=42;
 			final int updateValue=42;
 
-			String insertStmt = "insert into upTable (id, aValue) values (?, ?)";
+			final String insertStmt = "insert into upTable (id, aValue) values (?, ?)";
 			try (PreparedStatement stmt = conn.prepareStatement(insertStmt)) {
 				stmt.setInt(1, id);
 				stmt.setInt(2, value);
@@ -282,6 +282,42 @@ public class ASQLConnectorTest {
 				stmt.setInt(2, invalidId);
 				int rowCount = stmt.executeUpdate();
 				Assert.assertEquals(0, rowCount);
+			}
+
+			try (PreparedStatement stmt = conn.prepareStatement(insertStmt)) {
+				stmt.setInt(1, id+1);
+				stmt.setInt(2, value+1);
+				stmt.addBatch();
+				stmt.setInt(1, id+2);
+				stmt.setInt(2, value+2);
+				stmt.addBatch();
+				stmt.executeBatch();
+				Assert.assertEquals(2, stmt.getUpdateCount());
+			}
+			for (int i=1;i<3;i++) {
+				try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
+					stmt.setInt(1, id+i);
+					try (ResultSet rs = stmt.executeQuery()) {
+						rs.next();
+
+						Assert.assertEquals(value+i, rs.getInt(1));
+					}
+				}
+			}
+			try (PreparedStatement stmt = conn.prepareStatement("update upTable set aValue=?")) {
+				stmt.setInt(1, updateValue);
+				int rowCount = stmt.executeUpdate();
+				Assert.assertEquals(3, rowCount);
+			}
+			for (int i=0;i<3;i++) {
+				try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
+					stmt.setInt(1, id+1);
+					try (ResultSet rs = stmt.executeQuery()) {
+						rs.next();
+
+						Assert.assertEquals(updateValue, rs.getInt(1));
+					}
+				}
 			}
 		}
 	}
