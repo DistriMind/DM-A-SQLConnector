@@ -15,7 +15,7 @@ DM-A-SQLConnector lets you access your app's database through JDBC. Android ship
      ...
      dependencies {
          ...
-         api(group:'fr.distrimind.oss.util.asqlconnector', name: 'DM-A-SQLConnector', version: '1.0.0-STABLE')
+         api(group:'fr.distrimind.oss.asqlconnector', name: 'DM-A-SQLConnector', version: '1.0.0-STABLE')
          ...
      }
      ...
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            DriverManager.registerDriver((Driver) Class.forName("fr.distrimind.oss.util.asqlconnector.ASQLConnectorDriver").getConstructor().newInstance());
+            DriverManager.registerDriver((Driver) Class.forName("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver").getConstructor().newInstance());
         } catch (Exception e) {
             throw new RuntimeException("Failed to register ASQLConnectorDriver");
         }
@@ -122,11 +122,11 @@ https://github.com/ruboto/ruboto/wiki/Tutorial%3A-Using-an-SQLite-database-with-
 
 You can set the DM-A-SQLConnector log output level like this
 
-    fr.distrimind.oss.util.asqlconnector.Log.LEVEL = android.util.Log.VERBOSE;
+    fr.distrimind.oss.asqlconnector.Log.LEVEL = android.util.Log.VERBOSE;
 
 You can turn on resultset dumps like this
 
-    fr.distrimind.oss.util.asqlconnector.ASQLConnectorResultSet.dump = true;
+    fr.distrimind.oss.asqlconnector.ASQLConnectorResultSet.dump = true;
 
 
 # License
