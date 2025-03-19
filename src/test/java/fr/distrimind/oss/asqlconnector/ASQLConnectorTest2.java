@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class ASQLConnectorTest2 {
 
-	// TODO: This should be /data/data/fr.distrimind.oss.asqlconnector/databases/ if running on device
 	private static final File DB_DIR = new File("/data/data/fr.distrimind.oss.asqlconnector/databases/");
 	private static final Random random = new Random(System.currentTimeMillis());
 	private Connection conn;
@@ -216,6 +215,59 @@ public class ASQLConnectorTest2 {
 			}
 		}
 	}
+	@Test
+	public void testUpdate() throws SQLException {
+		String createTableStatement = "CREATE TABLE upTable (id int, aValue int)";
+		conn.createStatement().execute(createTableStatement);
+
+		final int id = 100500;
+		final int invalidId = 1;
+		final int value = 42;
+		final int updateValue = 42;
+
+		String insertStmt = "insert into upTable (id, aValue) values (?, ?)";
+		try (PreparedStatement stmt = conn.prepareStatement(insertStmt)) {
+			stmt.setInt(1, id);
+			stmt.setInt(2, value);
+			int rowCount = stmt.executeUpdate();
+			Assert.assertEquals(1, rowCount);
+		}
+
+		final String selectStmt = "SELECT aValue FROM upTable where id = ?";
+		try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
+			stmt.setInt(1, id);
+			try (ResultSet rs = stmt.executeQuery()) {
+				rs.next();
+
+				Assert.assertEquals(value, rs.getInt(1));
+			}
+		}
+
+		final String updateStmt = "update upTable set aValue=? where id=?";
+		try (PreparedStatement stmt = conn.prepareStatement(updateStmt)) {
+			stmt.setInt(1, updateValue);
+			stmt.setInt(2, id);
+			int rowCount = stmt.executeUpdate();
+			Assert.assertEquals(1, rowCount);
+		}
+
+		try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
+			stmt.setInt(1, id);
+			try (ResultSet rs = stmt.executeQuery()) {
+				rs.next();
+
+				Assert.assertEquals(updateValue, rs.getInt(1));
+			}
+		}
+
+		try (PreparedStatement stmt = conn.prepareStatement(updateStmt)) {
+			stmt.setInt(1, updateValue);
+			stmt.setInt(2, invalidId);
+			int rowCount = stmt.executeUpdate();
+			Assert.assertEquals(0, rowCount);
+		}
+
+	}
 
 	@Test
 	public void shouldRetrieveSavedBlob() throws SQLException {
@@ -385,4 +437,6 @@ public class ASQLConnectorTest2 {
 		random.nextBytes(aBlob);
 		return aBlob;
 	}
+
+
 }
