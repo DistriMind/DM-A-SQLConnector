@@ -4,6 +4,8 @@ package fr.distrimind.oss.asqlconnector;
 import junit.framework.AssertionFailedError;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -16,29 +18,15 @@ import java.util.regex.Pattern;
 
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class ASQLConnectorTest {
+@RunWith(Parameterized.class)
+public class ASQLConnectorATests {
 
-	// TODO: This should be /data/data/fr.distrimind.oss.asqlconnector/databases/ if running on device
-	private static final File DB_DIR = new File("/data/data/fr.distrimind.oss.asqlconnector/databases/");
-	private static final Random random = new Random(System.currentTimeMillis());
-
-	static {
-		registerDriver();
-	}
-
-	private static void registerDriver() {
-		try {
-			DriverManager.registerDriver((Driver) (Class
-					.forName("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver", true, ASQLConnectorTest.class.getClassLoader()).getConstructor().newInstance()));
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException |
-				 NoSuchMethodException | InvocationTargetException e) {
-			throw new AssertionFailedError(e.toString());
-		}
-	}
-
-	@Test
-	public void shouldRetrieveInsertedBasicTypes() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("basic-types.db"))) {
+	@Parameterized.Parameters(name = "{index}: {0}")
+	public static Collection<Object[]> getTests()
+	{
+		List<Object[]> tests=new ArrayList<>();
+		tests.add(new Object[]{
+				"shouldRetrieveInsertedBasicTypes", "basic-types.db", (ITest) conn -> {
 			String createTableStatement = "CREATE TABLE dummytable (id int, aString VARCHAR(254), aByte byte, "
 					+ "aShort short, anInt int, aLong long, aBool boolean, aFloat float, aDouble double, aText text)";
 			conn.createStatement().execute(createTableStatement);
@@ -96,8 +84,8 @@ public class ASQLConnectorTest {
 					Assert.assertEquals(i, rs.getInt("anInt"));
 					Assert.assertEquals(i, rs.getLong(4));
 					Assert.assertEquals(i, rs.getLong("anInt"));
-					Assert.assertEquals((long)i, rs.getObject(4));
-					Assert.assertEquals((long)i, rs.getObject("anInt"));
+					Assert.assertEquals((long) i, rs.getObject(4));
+					Assert.assertEquals((long) i, rs.getObject("anInt"));
 
 					Assert.assertEquals(l, rs.getLong(5));
 					Assert.assertEquals(l, rs.getLong("aLong"));
@@ -115,13 +103,13 @@ public class ASQLConnectorTest {
 					Assert.assertEquals(f, rs.getFloat("aFloat"), 0.0f);
 					Assert.assertEquals(f, rs.getDouble(7), 0.0f);
 					Assert.assertEquals(f, rs.getDouble("aFloat"), 0.0f);
-					Assert.assertEquals((double)f, rs.getObject(7));
-					Assert.assertEquals((double)f, rs.getObject("aFloat"));
+					Assert.assertEquals((double) f, rs.getObject(7));
+					Assert.assertEquals((double) f, rs.getObject("aFloat"));
 
 					Assert.assertEquals(d, rs.getDouble(8), 0.0);
 					Assert.assertEquals(d, rs.getDouble("aDouble"), 0.0);
-					Assert.assertEquals((float)d, rs.getFloat(8), 0.0);
-					Assert.assertEquals((float)d, rs.getFloat("aDouble"), 0.0);
+					Assert.assertEquals((float) d, rs.getFloat(8), 0.0);
+					Assert.assertEquals((float) d, rs.getFloat("aDouble"), 0.0);
 					Assert.assertEquals(d, rs.getObject(8));
 					Assert.assertEquals(d, rs.getObject("aDouble"));
 
@@ -133,11 +121,9 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
-
-	@Test
-	public void shouldRetrieveInsertedBigDecimals() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("basic-types.db"))) {
+		});
+		tests.add(new Object[]{
+				"shouldRetrieveInsertedBigDecimals", "basic-types.db", (ITest) conn -> {
 			String createTableStatement = "CREATE TABLE bdTable (id int, aBigDecimal numeric)";
 			conn.createStatement().execute(createTableStatement);
 
@@ -165,11 +151,9 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
-
-	@Test
-	public void shouldRetrieveInsertedNullValues() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("null-values.db"))) {
+		});
+		tests.add(new Object[]{
+				"shouldRetrieveInsertedNullValues", "null-values.db", (ITest) conn -> {
 			String createTableStatement = "CREATE TABLE dummytable (id int, aString VARCHAR(254), aByte byte, "
 					+ "aShort short, anInt int, aLong long, aBool boolean, aFloat float, aDouble double, aText text)";
 			conn.createStatement().execute(createTableStatement);
@@ -229,11 +213,9 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
-
-	@Test
-	public void testUpdate() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("basic-types.db"))) {
+		});
+		tests.add(new Object[]{
+				"testUpdate", "test-update.db", (ITest) conn -> {
 			String createTableStatement = "CREATE TABLE upTable (id int, aValue int)";
 			conn.createStatement().execute(createTableStatement);
 
@@ -320,11 +302,9 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
-
-	@Test
-	public void shouldRetrieveSavedBlob() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("blobs.db"))) {
+		});
+		tests.add(new Object[]{
+				"shouldRetrieveSavedBlob", "blobs.db", (ITest) conn -> {
 			conn.createStatement().execute("create table blobtest (key int, value blob)");
 
 			byte[] byteArray = randomByteArray();
@@ -350,11 +330,9 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
-
-	@Test
-	public void shouldSaveAndRetrieveTimestamps() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("timestamps.db"))) {
+		});
+		tests.add(new Object[]{
+				"shouldSaveAndRetrieveTimestamps", "timestamps.db", (ITest) conn -> {
 			conn.createStatement()
 					.execute("create table timestamptest (id integer primary key autoincrement, created_at timestamp)");
 
@@ -381,11 +359,26 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
+		});
+		tests.add(new Object[]{
+				"shouldSaveAndRetrieveTimestamps2", "timestamps.db", (ITest) conn -> {
+			conn.createStatement()
+					.execute("create table timestamptest (id integer primary key autoincrement, created_at timestamp)");
 
-	@Test
-	public void shouldRetrieveSavedStringAsBlob() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("timestamps.db"))) {
+			Timestamp timestamp = new Timestamp(new GregorianCalendar(2016, Calendar.AUGUST, 15, 12, 0, 0).getTimeInMillis());
+			long id = executeForGeneratedKey(conn, "insert into timestamptest (created_at) values (?)", timestamp);
+
+			try (PreparedStatement stmt = conn.prepareStatement("select created_at from timestamptest where id = ?")) {
+				stmt.setLong(1, id);
+				try (ResultSet rs = stmt.executeQuery()) {
+					rs.next();
+					Assert.assertEquals(timestamp, rs.getTimestamp(1));
+				}
+			}
+		}
+		});
+		tests.add(new Object[]{
+				"shouldRetrieveSavedStringAsBlob", "timestamps.db", (ITest) conn -> {
 			conn.createStatement().execute("CREATE TABLE stringblobtest (value TEXT)");
 
 			String s = "a random test string";
@@ -404,11 +397,9 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
-
-	@Test
-	public void shouldReturnGeneratedKeys() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("simple-types.db"))) {
+		});
+		tests.add(new Object[]{
+				"shouldReturnGeneratedKeys", "simple-types.db", (ITest) conn -> {
 			conn.createStatement().execute("create table simpletest (id integer primary key autoincrement, value varchar(255))");
 
 			long id;
@@ -430,11 +421,26 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
+		});
+		tests.add(new Object[]{
+				"shouldReturnGeneratedKeys2", "simple-types.db", (ITest) conn -> {
+			conn.createStatement()
+					.execute("create table simpletest (id integer primary key autoincrement, value varchar(255))");
 
-	@Test
-	public void shouldSaveAndRetrieveDates() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("null-dates.db"))) {
+			String randomString = UUID.randomUUID().toString();
+			long id = executeForGeneratedKey(conn, "insert into simpletest (value) values (?)", randomString);
+
+			try (PreparedStatement stmt = conn.prepareStatement("select value from simpletest where id = ?")) {
+				stmt.setLong(1, id);
+				try (ResultSet rs = stmt.executeQuery()) {
+					rs.next();
+					Assert.assertEquals(randomString, rs.getString(1));
+				}
+			}
+		}
+		});
+		tests.add(new Object[]{
+				"shouldSaveAndRetrieveDates", "null-dates.db", (ITest) conn -> {
 			conn.createStatement().execute("create table datetest (id integer primary key autoincrement, created_at date)");
 
 			long id;
@@ -461,11 +467,9 @@ public class ASQLConnectorTest {
 				}
 			}
 		}
-	}
-
-	@Test
-	public void shouldRetrieveDefaultDates() throws SQLException {
-		try (Connection conn = DriverManager.getConnection(createDatabase("null-dates.db"))) {
+		});
+		tests.add(new Object[]{
+				"shouldRetrieveDefaultDates", "null-dates.db", (ITest) conn -> {
 			conn.createStatement().execute("CREATE TABLE datetime_now_test (datetimecol TEXT NOT NULL DEFAULT (datetime('now')), unused TEXT)");
 			conn.createStatement().executeUpdate("INSERT INTO datetime_now_test (unused) VALUES (null)");
 
@@ -474,6 +478,65 @@ public class ASQLConnectorTest {
 					rs.next();
 					Assert.assertTrue(Pattern.compile("20\\d\\d-\\d\\d-\\d\\d.*").matcher(rs.getTimestamp("datetimecol").toString()).matches());
 				}
+			}
+		}
+		});
+		return tests;
+	}
+
+
+	static final File DB_DIR = new File("/data/data/fr.distrimind.oss.asqlconnector/databases/");
+	static final Random random = new Random(System.currentTimeMillis());
+
+	/*static {
+		registerDriver();
+	}*/
+
+	private static void registerDriver() {
+		try {
+			DriverManager.registerDriver((Driver) (Class
+					.forName("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver", true, ASQLConnectorATests.class.getClassLoader()).getConstructor().newInstance()));
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException |
+				 NoSuchMethodException | InvocationTargetException e) {
+			throw new AssertionFailedError(e.toString());
+		}
+	}
+	private final String dbFileName;
+	private final ITest test;
+	public ASQLConnectorATests(String testName, String dbFileName, ITest test)
+	{
+		if (testName==null)
+			throw new NullPointerException();
+		if (dbFileName==null)
+			throw new NullPointerException();
+		if (test==null)
+			throw new NullPointerException();
+		this.dbFileName=dbFileName;
+		this.test=test;
+	}
+
+	@Test
+	public void launchTestA() throws SQLException {
+		registerDriver();
+		try (Connection conn = DriverManager.getConnection(createDatabase(dbFileName))) {
+			test.test(conn);
+		}
+	}
+
+
+	private static long executeForGeneratedKey(Connection conn, String query, Object... parameters) throws SQLException {
+		return executeForGeneratedKeyWithList(conn, query, Arrays.asList(parameters));
+	}
+
+	private static long executeForGeneratedKeyWithList(Connection conn, String query, List<Object> parameters) throws SQLException {
+		try (PreparedStatement stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
+			for (int i = 0; i < parameters.size(); i++) {
+				stmt.setObject(i + 1, parameters.get(i));
+			}
+			stmt.executeUpdate();
+			try (ResultSet rs = stmt.getGeneratedKeys()) {
+				rs.next();
+				return rs.getLong(1);
 			}
 		}
 	}
@@ -489,7 +552,7 @@ public class ASQLConnectorTest {
 		return "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
 	}
 
-	private byte[] randomByteArray() {
+	private static byte[] randomByteArray() {
 		int blobSize = 1000 + random.nextInt(10_000);
 		byte[] aBlob = new byte[blobSize];
 		random.nextBytes(aBlob);
