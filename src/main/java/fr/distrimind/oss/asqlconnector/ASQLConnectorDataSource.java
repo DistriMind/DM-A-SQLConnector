@@ -45,7 +45,7 @@ public class ASQLConnectorDataSource implements DataSource {
 		try {
 			logWriter = new PrintWriter(logFileName);
 		} catch (FileNotFoundException e) {
-			Log.e("File "+logFileName+" not found", e);
+			Log.error(() -> "File "+logFileName+" not found", e);
 		}
 		return logWriter;
 	}
@@ -55,7 +55,7 @@ public class ASQLConnectorDataSource implements DataSource {
 		try {
 			DriverManager.setLogWriter(new PrintWriter(logFileName));
 		} catch (FileNotFoundException e) {
-			Log.e("File "+logFileName+" not found", e);
+			Log.error(() -> "File "+logFileName+" not found", e);
 		}
 	}
 

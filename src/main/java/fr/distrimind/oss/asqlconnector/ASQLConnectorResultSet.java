@@ -105,7 +105,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	@Override
 	public void clearWarnings() throws SQLException {
 		// TODO: Evaluate if implementation is sufficient (if so, delete comment and log)
-		Log.e(" ********************* not implemented @ " + DebugPrinter.getFileName() + " line " + DebugPrinter.getLineNumber());
+		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line " + DebugPrinter.getLineNumber());
 	}
 
 	@Override
@@ -337,7 +337,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 						java.util.Date parsedDate = dateFormat.parse(getStringImpl(index));
 						date = new Date(parsedDate.getTime());
 					} catch (Exception e) {
-						Log.e("Impossible to parse date", e);
+						Log.error(() -> "Impossible to parse date", e);
 					}
 					break;
 

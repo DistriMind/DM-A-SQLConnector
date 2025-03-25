@@ -54,8 +54,8 @@ public class ASQLConnectorConnection implements Connection {
 	 * @param info Properties object with options.  Supported options are "timeout", "retry", and "shared".
 	 */
 	public ASQLConnectorConnection(String url, Properties info) throws SQLException {
-		Log.v("ASQLConnectorConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
-		Log.v("New sqlite jdbc from url '" + url + "', " + "'" + info + "'");
+		Log.trace(() -> "ASQLConnectorConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.trace(() -> "New sqlite jdbc from url '" + url + "', " + "'" + info + "'");
 
 		this.url = url;
 		// Make a filename from url
@@ -84,7 +84,7 @@ public class ASQLConnectorConnection implements Connection {
 				}
 				int equals = options.lastIndexOf('=', optionEnd);
 				if (equals==-1)
-					Log.e("Error Parsing URL \"" + url);
+					Log.error(() -> "Error Parsing URL \"" + url);
 				String optionName = options.substring(0, equals).trim();
 				String optionValueString = options.substring(equals + 1, optionEnd).trim();
 				long optionValue;
@@ -96,17 +96,19 @@ public class ASQLConnectorConnection implements Connection {
 						timeout = optionValue;
 						retryInterval = optionValue;
 					}
-					Log.v("Timeout: " + timeout);
+					long to=timeout;
+					Log.trace(() -> "Timeout: " + to);
 				} catch (NumberFormatException nfe) {
 					// print and ignore
-					Log.e("Error Parsing URL \"" + url + "\" Timeout String \"" + optionValueString + "\" is not a valid long", nfe);
+					Log.error(() -> "Error Parsing URL \"" + url + "\" Timeout String \"" + optionValueString + "\" is not a valid long", nfe);
 				}
 				if (optionEnd==options.length())
 					break;
 				options = options.substring(optionEnd + 1);
 			}
 		}
-		Log.v("opening database " + dbQname);
+		String dbn=dbQname;
+		Log.trace(() -> "opening database " + dbn);
 		ensureDbFileCreation(dbQname);
 		int flags = android.database.sqlite.SQLiteDatabase.CREATE_IF_NECESSARY
 				| android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
@@ -117,21 +119,21 @@ public class ASQLConnectorConnection implements Connection {
 				try {
 					flags = Integer.parseInt(info.getProperty(ASQLConnectorDriver.DATABASE_FLAGS));
 				} catch (NumberFormatException nfe) {
-					Log.e("Error Parsing DatabaseFlags \"" + info.getProperty(ASQLConnectorDriver.DATABASE_FLAGS) + " not a number ", nfe);
+					Log.error(() -> "Error Parsing DatabaseFlags \"" + info.getProperty(ASQLConnectorDriver.DATABASE_FLAGS) + " not a number ", nfe);
 				}
 			} else if (info.getProperty(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS) != null) {
 				try {
 					int extraFlags = Integer.parseInt(info.getProperty(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS));
 					flags |= extraFlags;
 				} catch (NumberFormatException nfe) {
-					Log.e("Error Parsing DatabaseFlags \"" + info.getProperty(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS) + " not a number ", nfe);
+					Log.error(() -> "Error Parsing DatabaseFlags \"" + info.getProperty(ASQLConnectorDriver.ADDITONAL_DATABASE_FLAGS) + " not a number ", nfe);
 				}
 			}
 		}
 		synchronized (dbMap) {
 			sqlitedb = dbMap.get(dbQname);
 			if (sqlitedb == null) {
-				Log.i("ASQLConnectorConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Opening new database: " + dbQname);
+				Log.info(() -> "ASQLConnectorConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Opening new database: " + dbn);
 				sqlitedb = new ASQLConnectorDatabase(dbQname, timeout, retryInterval, flags);
 				dbMap.put(dbQname, sqlitedb);
 			}
@@ -197,12 +199,12 @@ public class ASQLConnectorConnection implements Connection {
 
 	@Override
 	public void close() throws SQLException {
-		Log.v("ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.trace(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
 		if (sqlitedb != null) {
 			synchronized (dbMap) {
 				clientMap.remove(this);
 				if (!clientMap.containsValue(sqlitedb)) {
-					Log.i("ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Closing the database since since last connection was closed.");
+					Log.info(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Closing the database since since last connection was closed.");
 					setAutoCommit(true);
 					sqlitedb.close();
 					dbMap.remove(sqlitedb.dbQname);
@@ -210,7 +212,7 @@ public class ASQLConnectorConnection implements Connection {
 			}
 			sqlitedb = null;
 		} else {
-			Log.e("ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Duplicate close!");
+			Log.error(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Duplicate close!");
 		}
 	}
 
@@ -220,9 +222,9 @@ public class ASQLConnectorConnection implements Connection {
 			throw new SQLException("database in auto-commit mode");
 		}
 		sqlitedb.setTransactionSuccessful();
-		Log.d("END TRANSACTION  (commit) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.debug(() -> "END TRANSACTION  (commit) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
 		sqlitedb.endTransaction();
-		Log.d("BEGIN TRANSACTION (after commit) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.debug(() -> "BEGIN TRANSACTION (after commit) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
 		sqlitedb.beginTransaction();
 	}
 
@@ -264,11 +266,11 @@ public class ASQLConnectorConnection implements Connection {
 		if (autoCommit) {
 			if (sqlitedb.inTransaction()) { // to be on safe side.
 				sqlitedb.setTransactionSuccessful();
-				Log.d("END TRANSACTION (autocommit on) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+				Log.debug(() -> "END TRANSACTION (autocommit on) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
 				sqlitedb.endTransaction();
 			}
 		} else {
-			Log.d("BEGIN TRANSACTION (autocommit off) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+			Log.debug(() -> "BEGIN TRANSACTION (autocommit off) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
 			sqlitedb.beginTransaction();
 		}
 	}
@@ -328,7 +330,7 @@ public class ASQLConnectorConnection implements Connection {
 	@Override
 	public SQLWarning getWarnings() throws SQLException {
 		// TODO: Is this a sufficient implementation? (If so, delete comment and logging)
-		Log.e(" ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
 				+ DebugPrinter.getLineNumber());
 		return null;
 	}
@@ -427,9 +429,9 @@ public class ASQLConnectorConnection implements Connection {
 		if (autoCommit) {
 			throw new SQLException("database in auto-commit mode");
 		}
-		Log.d("END TRANSACTION (rollback) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.debug(() -> "END TRANSACTION (rollback) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
 		sqlitedb.endTransaction();
-		Log.d("BEGIN TRANSACTION (after rollback) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.debug(() -> "BEGIN TRANSACTION (after rollback) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
 		sqlitedb.beginTransaction();
 	}
 

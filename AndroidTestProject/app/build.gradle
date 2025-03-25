@@ -44,4 +44,7 @@ dependencies {
     androidTestImplementation libs.espresso.core
     androidTestImplementation libs.support.v4
 
+    implementation jlibs.dm.flexi.logxml.common
+    implementation jlibs.dm.flexi.logxml.android
+
 }

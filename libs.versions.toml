@@ -1,9 +1,11 @@
 [versions]
 junitVersion = "4.13.2"
 androidStubVersion = "4.3.0.0"
-
+dmFlexiLogXML='2.2.0-STABLE'
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
 androidStub = { group = "stub.android", name = "AndroidStub", version.ref = "androidStubVersion" }
+dm-flexi-logxml-common = { group = "fr.distrimind.oss.flexilogxml.common", name = "DM-FlexiLogXML-Common", version.ref = "dmFlexiLogXML" }
+dm-flexi-logxml-android = { group = "fr.distrimind.oss.flexilogxml.android", name = "DM-FlexiLogXML-Android", version.ref = "dmFlexiLogXML" }
 

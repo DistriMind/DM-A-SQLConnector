@@ -52,7 +52,7 @@ public class ASQLConnectorStatement implements Statement {
 	@Override
 	public void clearWarnings() throws SQLException {
 		// TODO Evaluate if the implementation is sufficient (if so, delete comment and log)
-		Log.e(" ********************* not implemented @ " + DebugPrinter.getFileName() + " line " + DebugPrinter.getLineNumber());
+		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line " + DebugPrinter.getLineNumber());
 	}
 
 	@Override
@@ -207,7 +207,7 @@ public class ASQLConnectorStatement implements Statement {
 	public int getMaxRows() throws SQLException {
 		// TODO: return rs.getMaxRows()
 		// TODO: Avoid NPE for rs
-		Log.e(" ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
 				+ DebugPrinter.getLineNumber());
 		return 0;
 	}
@@ -283,7 +283,7 @@ public class ASQLConnectorStatement implements Statement {
 	@Override
 	public SQLWarning getWarnings() throws SQLException {
 		// TODO Evaluate if the implementation is sufficient (if so, delete comment and log)
-		Log.e(" ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
 				+ DebugPrinter.getLineNumber());
 		return null;
 	}

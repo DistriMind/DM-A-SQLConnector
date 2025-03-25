@@ -1,6 +1,5 @@
 package fr.distrimind.oss.asqlconnector;
 
-import java.math.BigDecimal;
 
 class ASQLConnectorBlobType {
     static final byte NULL_TYPE = 0;

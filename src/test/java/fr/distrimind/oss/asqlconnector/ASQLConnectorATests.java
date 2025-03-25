@@ -24,8 +24,6 @@ public class ASQLConnectorATests {
 	@Parameterized.Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> getTests()
 	{
-		Log.LEVEL=android.util.Log.INFO;
-
 		List<Object[]> tests=new ArrayList<>();
 		tests.add(new Object[]{
 				"shouldRetrieveInsertedBasicTypes", "basic-types.db", (ITest) conn -> {
@@ -329,8 +327,6 @@ public class ASQLConnectorATests {
 				try (ResultSet rs = stmt.executeQuery()) {
 					rs.next();
 					blob = rs.getBlob(1);
-					Log.i(Arrays.toString(byteArray));
-					Log.i(Arrays.toString(blob.getBytes(1, byteArray.length)));
 					Assert.assertArrayEquals(byteArray, blob.getBytes(1, byteArray.length));
 					Assert.assertEquals(byteArray.length, blob.length());
 					Assert.assertArrayEquals(Arrays.copyOfRange(byteArray, 1, byteArray.length - 2), blob.getBytes(2, byteArray.length - 3));

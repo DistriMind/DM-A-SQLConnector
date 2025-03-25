@@ -52,6 +52,7 @@ repositories {
 dependencies {
 	compileOnly jlibs.androidStub
     testImplementation jlibs.junit
+    implementation jlibs.dm.flexi.logxml.common
     
 }
 

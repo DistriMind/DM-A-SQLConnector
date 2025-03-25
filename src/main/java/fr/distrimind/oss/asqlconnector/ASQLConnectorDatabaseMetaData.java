@@ -271,7 +271,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				try {
 					rs.close();
 				} catch (Exception e) {
-					Log.e("Impossible to close result set", e);
+					Log.error(() -> "Impossible to close result set", e);
 				}
 			}
 		}

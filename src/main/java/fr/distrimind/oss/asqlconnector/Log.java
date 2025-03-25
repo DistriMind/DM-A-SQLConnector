@@ -1,76 +1,43 @@
 package fr.distrimind.oss.asqlconnector;
 
+import java.util.function.Supplier;
+
+import fr.distrimind.oss.flexilogxml.common.FlexiLogXML;
+import fr.distrimind.oss.flexilogxml.common.log.DMLogger;
+import fr.distrimind.oss.flexilogxml.common.log.Marker;
+import fr.distrimind.oss.flexilogxml.common.log.MarkerFactory;
+
 public class Log {
 
-	public static int LEVEL = android.util.Log.WARN;
-	public static ILog LOG = new AndroidLog();
+	private static final DMLogger logger= FlexiLogXML.getLoggerInstance("DM-A-SQLConnector");
+	private static final Marker marker= MarkerFactory.getSingleton().getMarker("DM-A-SQLConnector");
 
-	static void d(String message) {
-		LOG.d(message);
+	public static void trace(Supplier<String> message)
+	{
+		logger.trace(marker, message);
 	}
 
-	static void e(String message) {
-		LOG.e(message);
+	public static void info(Supplier<String> message)
+	{
+		logger.info(marker, message);
+	}
+	public static void info(String message)
+	{
+		logger.info(marker, message);
 	}
 
-	static void e(String message, Throwable t) {
-		LOG.e(message, t);
+	public static void debug(Supplier<String> message)
+	{
+		logger.debug(marker, message);
 	}
 
-	static void i(String message) {
-		LOG.i(message);
+	public static void error(Supplier<String> message)
+	{
+		logger.error(marker, message);
 	}
 
-	static void v(String message) {
-		LOG.v(message);
-	}
-
-	public interface ILog {
-
-		void d(String message);
-
-		void e(String message);
-
-		void e(String message, Throwable t);
-
-		void i(String message);
-
-		void v(String message);
-
-	}
-
-	public static class AndroidLog implements ILog {
-
-		private static final String TAG = "DM-A-SQLConnector";
-
-		@Override
-		public void d(String message) {
-			if (LEVEL <= android.util.Log.DEBUG)
-				android.util.Log.d(TAG, message);
-		}
-
-		@Override
-		public void e(String message) {
-			if (LEVEL <= android.util.Log.ERROR)
-				android.util.Log.e(TAG, message);
-		}
-
-		@Override
-		public void e(String message, Throwable t) {
-			if (LEVEL <= android.util.Log.ERROR)
-				android.util.Log.e(TAG, message, t);
-		}
-
-		@Override
-		public void i(String message) {
-			if (LEVEL <= android.util.Log.INFO)
-				android.util.Log.i(TAG, message);
-		}
-
-		@Override
-		public void v(String message) {
-			if (LEVEL <= android.util.Log.VERBOSE)
-				android.util.Log.v(TAG, message);
-		}
+	public static void error(Supplier<String> message, Throwable t)
+	{
+		logger.error(marker, message, t);
 	}
 }

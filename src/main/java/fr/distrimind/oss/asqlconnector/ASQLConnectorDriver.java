@@ -46,7 +46,7 @@ public class ASQLConnectorDriver implements java.sql.Driver {
 		try {
 			java.sql.DriverManager.registerDriver(new ASQLConnectorDriver());
 		} catch (Exception e) {
-			Log.e("Impossible to load DM-A-SQLConnector driver", e);
+			Log.error(() -> "Impossible to load DM-A-SQLConnector driver", e);
 		}
 
 	}
@@ -79,7 +79,7 @@ public class ASQLConnectorDriver implements java.sql.Driver {
 	@Override
 	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
 		// TODO Evaluate if implementation is sufficient (if so, delete comment and log)
-		Log.e(" ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
 				+ DebugPrinter.getLineNumber());
 		return new DriverPropertyInfo[0];
 	}
