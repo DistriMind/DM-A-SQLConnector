@@ -36,6 +36,10 @@ public class ASQLConnectorClob implements Clob, NClob {
 	 */
 	private InputStream inputStream;
 
+	String getString() {
+		return string;
+	}
+
 	/**
 	 * Constructor taking a string.
 	 *

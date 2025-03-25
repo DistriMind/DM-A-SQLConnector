@@ -108,7 +108,7 @@ public class ASQLConnectorDatabase {
 	public Cursor rawQuery(String sql, String[] makeArgListQueryString) throws SQLException {
 		Log.v("SQLiteDatabase rawQuery: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
 		long queryStart = System.currentTimeMillis();
-		long delta = 0;
+		long delta ;
 		do {
 			try {
 				Cursor cursor = sqliteDatabase.rawQuery(sql, makeArgListQueryString);
@@ -133,10 +133,24 @@ public class ASQLConnectorDatabase {
 	public void execSQL(String sql, Object[] makeArgListQueryObject) throws SQLException {
 		Log.v("SQLiteDatabase execSQL: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
 		long timeNow = System.currentTimeMillis();
-		long delta = 0;
+		long delta;
+		if (makeArgListQueryObject == null)
+			throw new NullPointerException();
 		do {
 			try {
-				sqliteDatabase.execSQL(sql, makeArgListQueryObject);
+				Object[] bs = new Object[makeArgListQueryObject.length];
+				for (int i = 0; i < makeArgListQueryObject.length; i++) {
+					Object o = makeArgListQueryObject[i];
+					if (o instanceof ASQLConnectorBlob)
+						bs[i] = ((ASQLConnectorBlob) o).b;
+					else
+						bs[i] = o;
+				}
+				sqliteDatabase.execSQL(sql, bs);
+				for (Object o : makeArgListQueryObject) {
+					if (o instanceof ASQLConnectorBlob)
+						((ASQLConnectorBlob) o).free();
+				}
 				Log.v("SQLiteDatabase execSQL OK: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
 				return;
 			} catch (SQLiteException e) {

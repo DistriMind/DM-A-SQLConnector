@@ -24,6 +24,8 @@ public class ASQLConnectorATests {
 	@Parameterized.Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> getTests()
 	{
+		Log.LEVEL=android.util.Log.INFO;
+
 		List<Object[]> tests=new ArrayList<>();
 		tests.add(new Object[]{
 				"shouldRetrieveInsertedBasicTypes", "basic-types.db", (ITest) conn -> {
@@ -124,7 +126,7 @@ public class ASQLConnectorATests {
 		});
 		tests.add(new Object[]{
 				"shouldRetrieveInsertedBigDecimals", "basic-types.db", (ITest) conn -> {
-			String createTableStatement = "CREATE TABLE bdTable (id int, aBigDecimal numeric)";
+			String createTableStatement = "CREATE TABLE bdTable (id int, aBigDecimal text)";
 			conn.createStatement().execute(createTableStatement);
 
 			int id = 100500;
@@ -309,10 +311,16 @@ public class ASQLConnectorATests {
 
 			byte[] byteArray = randomByteArray();
 
+			Blob blob=new ASQLConnectorBlob(new ByteArrayInputStream(byteArray), byteArray.length);
+			Assert.assertArrayEquals(byteArray, blob.getBytes(1, byteArray.length));
+			Assert.assertEquals(byteArray.length, blob.length());
+			Assert.assertArrayEquals(Arrays.copyOfRange(byteArray, 1, byteArray.length - 2), blob.getBytes(2, byteArray.length - 3));
+
+
 			int id = 441;
 			try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO blobtest(key,value) VALUES (?, ?)")) {
 				stmt.setInt(1, id);
-				stmt.setBinaryStream(2, new ByteArrayInputStream(byteArray), byteArray.length);
+				stmt.setBlob(2, new ByteArrayInputStream(byteArray), byteArray.length);
 				stmt.executeUpdate();
 			}
 
@@ -320,13 +328,16 @@ public class ASQLConnectorATests {
 				stmt.setInt(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
 					rs.next();
-					Blob blob = rs.getBlob(1);
+					blob = rs.getBlob(1);
+					Log.i(Arrays.toString(byteArray));
+					Log.i(Arrays.toString(blob.getBytes(1, byteArray.length)));
 					Assert.assertArrayEquals(byteArray, blob.getBytes(1, byteArray.length));
 					Assert.assertEquals(byteArray.length, blob.length());
 					Assert.assertArrayEquals(Arrays.copyOfRange(byteArray, 1, byteArray.length - 2), blob.getBytes(2, byteArray.length - 3));
 
-					Blob blobAsObj = (Blob) rs.getObject(1);
-					Assert.assertArrayEquals(byteArray, blobAsObj.getBytes(1, (int) blobAsObj.length()));
+					blob = (Blob) rs.getObject(1);
+					Assert.assertArrayEquals(byteArray, blob.getBytes(1, (int) blob.length()));
+					Assert.assertArrayEquals(Arrays.copyOfRange(byteArray, 1, byteArray.length - 2), blob.getBytes(2, byteArray.length - 3));
 				}
 			}
 		}
@@ -379,21 +390,21 @@ public class ASQLConnectorATests {
 		});
 		tests.add(new Object[]{
 				"shouldRetrieveSavedStringAsBlob", "timestamps.db", (ITest) conn -> {
-			conn.createStatement().execute("CREATE TABLE stringblobtest (value TEXT)");
+			conn.createStatement().execute("CREATE TABLE stringblobtest (value CLOB)");
 
 			String s = "a random test string";
 			byte[] byteArray = s.getBytes();
 
 			try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO stringblobtest (value) VALUES (?)")) {
-				stmt.setString(1, s);
+				stmt.setClob(1, new ASQLConnectorClob(s));
 				stmt.executeUpdate();
 			}
 
 			try (PreparedStatement stmt = conn.prepareStatement("SELECT value FROM stringblobtest")) {
 				try (ResultSet rs = stmt.executeQuery()) {
 					rs.next();
-					Blob blob = rs.getBlob(1);
-					Assert.assertArrayEquals(byteArray, blob.getBytes(1, (int) blob.length()));
+					Clob clob = rs.getClob(1);
+					Assert.assertEquals(s, clob.getSubString(1, s.length()));
 				}
 			}
 		}

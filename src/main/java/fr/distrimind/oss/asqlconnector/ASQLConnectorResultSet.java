@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Map;
 
@@ -170,7 +169,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public BigDecimal getBigDecimal(int colID) throws SQLException {
-		return Utils.bigDecimalFromBytes(getBytesImpl(colID));
+		return Utils.bigDecimalFromString(getStringImpl(colID));
 	}
 
 	@Override
@@ -180,7 +179,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public BigDecimal getBigDecimal(int colID, int scale) throws SQLException {
-		return Utils.bigDecimalFromBytes(getBytesImpl(colID)).setScale(scale);
+		return getBigDecimal(colID).setScale(scale);
 	}
 
 	@Override
@@ -201,13 +200,17 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public Blob getBlob(int index) throws SQLException {
-		try {
-			byte[] b = getBytes(index);
-			return new ASQLConnectorBlob(b);
-		} catch (android.database.SQLException e) {
-			throw ASQLConnectorConnection.chainException(e);
+	public ASQLConnectorBlob getBlob(int index) throws SQLException {
+		byte[] b=getBlobImpl(index);
+
+		if (b == null) {
+			return null;
 		}
+		if (b[0]!=ASQLConnectorBlobType.BYTE_ARRAY_TYPE)
+			throw new SQLException();
+		ASQLConnectorBlob r=new ASQLConnectorBlob();
+		r.b=b;
+		return r;
 	}
 
 	@Override
@@ -252,18 +255,14 @@ public class ASQLConnectorResultSet implements ResultSet {
 	public byte[] getBytes(int index) throws SQLException {
 		try {
 			lastColumnRead = index;
-			byte[] bytes = c.getBlob(ci(index));
-			// SQLite includes the zero-byte at the end for Strings.
-			if (ASQLConnectorResultSetMetaData.getType(c, ci(index)) == 3) { //  Cursor.FIELD_TYPE_STRING
-				return Arrays.copyOf(bytes, bytes.length - 1);
-			} else
-				return Utils.getUntypedBytesArray(bytes);
+			return Utils.getUntypedBytesArray(getStringImpl(ci(index)));
+
 		} catch (android.database.SQLException e) {
 			throw ASQLConnectorConnection.chainException(e);
 		}
 	}
 
-	private byte[] getBytesImpl(int index) throws SQLException {
+	private byte[] getBlobImpl(int index) throws SQLException {
 		try {
 			lastColumnRead = index;
 			return c.getBlob(ci(index));
@@ -291,11 +290,14 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public ASQLConnectorClob getClob(int colID) throws SQLException {
-		String clobString = getString(colID);
-		if (clobString == null) {
+		byte[] b=getBlobImpl(colID);
+
+		if (b == null) {
 			return null;
 		}
-		return new ASQLConnectorClob(clobString);
+		if (b[0]!=ASQLConnectorBlobType.STRING_TYPE)
+			throw new SQLException();
+		return new ASQLConnectorClob(new String(b, 1, b.length-1, StandardCharsets.UTF_8));
 	}
 
 	@Override
@@ -325,16 +327,14 @@ public class ASQLConnectorResultSet implements ResultSet {
 					return null;
 				case Types.INTEGER:
 				case Types.BIGINT:
-					date = new Date(getLong(index));
-					break;
 				case Types.DATE:
-					date = new Date(getTimestamp(index).getTime());
+					date = new Date(getLong(index));
 					break;
 				default:
 					// format 2011-07-11 11:36:30.009
 					try {
 						SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
-						java.util.Date parsedDate = dateFormat.parse(getString(index));
+						java.util.Date parsedDate = dateFormat.parse(getStringImpl(index));
 						date = new Date(parsedDate.getTime());
 					} catch (Exception e) {
 						Log.e("Impossible to parse date", e);
@@ -356,9 +356,9 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public Date getDate(int colID, Calendar cal) throws SQLException {
-		// TODO: Implement, perhaps as Xerial driver:
-		//  https://github.com/xerial/sqlite-jdbc/blob/master/src/main/java/org/sqlite/jdbc3/JDBC3ResultSet.java#L313
-		throw new UnsupportedOperationException("getDate(int, Calendar) not implemented yet");
+		Calendar c=((Calendar)cal.clone());
+		c.setTimeInMillis(getTimestamp(colID).getTime());
+		return new Date(c.getTimeInMillis());
 	}
 
 	@Override
@@ -469,22 +469,41 @@ public class ASQLConnectorResultSet implements ResultSet {
 			case 4: // Cursor.FIELD_TYPE_BLOB:
 				//CONVERT TO BYTE[] OBJECT
 			{
-				byte[] t = c.getBlob(newIndex);
-				switch (t[0]) {
-					case ASLConnectorBytesArrayType.NULL_TYPE:
+				byte[] blob=c.getBlob(newIndex);
+				switch (blob[0])
+				{
+					case ASQLConnectorBlobType.NULL_TYPE:
 						return null;
-					case ASLConnectorBytesArrayType.BIG_DECIMAL_TYPE:
-						return Utils.bigDecimalFromBytes(t);
-					default:
-						return new ASQLConnectorBlob(Utils.getUntypedBytesArray(t));
+					case ASQLConnectorBlobType.STRING_TYPE:
+						return new ASQLConnectorClob(new String(blob, 1, blob.length-1, StandardCharsets.UTF_8));
+					default: {
+						ASQLConnectorBlob r=new ASQLConnectorBlob();
+						r.b=blob;
+						return r;
+					}
 				}
+
 			}
 			case 2: // Cursor.FIELD_TYPE_FLOAT:
 				return c.getDouble(newIndex);
 			case 1: // Cursor.FIELD_TYPE_INTEGER:
 				return c.getLong(newIndex);
 			case 3: // Cursor.FIELD_TYPE_STRING:
-				return c.getString(newIndex);
+			{
+				String s = c.getString(newIndex);
+				switch (s.charAt(0)) {
+					case ASLConnectorStringType.NULL_TYPE:
+						return null;
+					case ASLConnectorStringType.BIG_DECIMAL_TYPE:
+						return Utils.bigDecimalFromString(s);
+					case ASLConnectorStringType.STRING_TYPE:
+						return Utils.getUntypedString(s);
+					case ASLConnectorStringType.BYTE_ARRAY_TYPE:
+						return Utils.getUntypedBytesArray(s);
+					default:
+						return s;
+				}
+			}
 			case 0: // Cursor.FIELD_TYPE_NULL:
 				return null;
 			default:
@@ -566,6 +585,10 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public String getString(int index) throws SQLException {
+		return Utils.getUntypedString(getStringImpl(index));
+	}
+
+	public String getStringImpl(int index) throws SQLException {
 		try {
 			lastColumnRead = index;
 			return c.getString(ci(index));
@@ -582,9 +605,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public Time getTime(int colID) throws SQLException {
-		// TODO: Implement as Xerial driver
-		// https://github.com/xerial/sqlite-jdbc/blob/master/src/main/java/org/sqlite/jdbc3/JDBC3ResultSet.java#L449
-		throw new UnsupportedOperationException("Not implemented yet");
+		return new Time(getTimestamp(colID).getTime());
 	}
 
 	@Override
@@ -594,9 +615,9 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public Time getTime(int colID, Calendar cal) throws SQLException {
-		// TODO: Implement as Xerial driver
-		// https://github.com/xerial/sqlite-jdbc/blob/master/src/main/java/org/sqlite/jdbc3/JDBC3ResultSet.java#L449
-		throw new UnsupportedOperationException("Not implemented yet");
+		Calendar c=((Calendar)cal.clone());
+		c.setTimeInMillis(getTimestamp(colID).getTime());
+		return new Time(c.getTimeInMillis());
 	}
 
 	@Override
@@ -613,18 +634,18 @@ public class ASQLConnectorResultSet implements ResultSet {
 					return null;
 				case Types.INTEGER:
 				case Types.BIGINT:
-					return new Timestamp(getLong(index));
+				case Types.TIMESTAMP:
 				case Types.DATE:
-					return new Timestamp(getDate(index).getTime());
+					return new Timestamp(getLong(index));
 				default:
 					// format 2011-07-11 11:36:30.009 OR 2011-07-11 11:36:30
 					SimpleDateFormat timeStampFormat = new SimpleDateFormat(TIMESTAMP_PATTERN);
 					SimpleDateFormat timeStampFormatNoMillis = new SimpleDateFormat(TIMESTAMP_PATTERN_NO_MILLIS);
 					try {
-						return new Timestamp(timeStampFormat.parse(getString(index)).getTime());
+						return new Timestamp(timeStampFormat.parse(getStringImpl(index)).getTime());
 					} catch (ParseException e) {
 						try {
-							return new Timestamp(timeStampFormatNoMillis.parse(getString(index)).getTime());
+							return new Timestamp(timeStampFormatNoMillis.parse(getStringImpl(index)).getTime());
 						} catch (ParseException e1) {
 							return new Timestamp(getDate(index).getTime());
 						}
@@ -644,9 +665,9 @@ public class ASQLConnectorResultSet implements ResultSet {
 	@Override
 	public Timestamp getTimestamp(int colID, Calendar cal)
 			throws SQLException {
-		// TODO Implement with Calendar
-		Log.e(" ********************* not implemented correctly - Calendar is ignored. @ " + DebugPrinter.getFileName() + " line " + DebugPrinter.getLineNumber());
-		return getTimestamp(colID);
+		Calendar c=((Calendar)cal.clone());
+		c.setTimeInMillis(getTimestamp(colID).getTime());
+		return new Timestamp(c.getTimeInMillis());
 	}
 
 	@Override

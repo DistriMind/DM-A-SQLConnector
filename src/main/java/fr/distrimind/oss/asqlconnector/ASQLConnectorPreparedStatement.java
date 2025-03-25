@@ -8,6 +8,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 
 public class ASQLConnectorPreparedStatement implements PreparedStatement {
@@ -133,7 +134,7 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 		}
 	}
 
-	private String[] makeArgListQueryString() {
+	private String[] makeArgListQueryString() throws SQLException {
 		if (l == null || l.isEmpty()) {
 			return new String[0];
 		}
@@ -141,7 +142,14 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 		String[] t=new String[l.size()];
 		int i=0;
 		for (Object o : l) {
-			t[i++]=o.toString();
+			if (o==null)
+				t[i++]=null;
+			else if (o.getClass()==byte[].class)
+				t[i++] = Base64.getEncoder().encodeToString((byte[]) o);
+			else if (o instanceof ASQLConnectorBlob)
+				t[i++] = ((ASQLConnectorBlob) o).toBase64();
+			else
+				t[i++]=o.toString();
 		}
 		return t;
 	}
@@ -470,8 +478,9 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 	}
 
 	@Override
-	public void setBigDecimal(int parameterIndex, BigDecimal theBigDecimal) throws SQLException {
-		setObject(parameterIndex, Utils.bigDecimalToBytes(theBigDecimal));
+	public void setBigDecimal(int parameterIndex, BigDecimal theBigDecimal) {
+		ensureCap(parameterIndex);
+		setObj(parameterIndex, Utils.bigDecimalToString(theBigDecimal));
 	}
 
 	/**
@@ -516,8 +525,21 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 
 	@Override
 	public void setBlob(int parameterIndex, Blob theBlob) throws SQLException {
+
+		if (theBlob instanceof ASQLConnectorBlob)
+			setBlobImpl(parameterIndex, (ASQLConnectorBlob)theBlob);
+		else {
+			long l=theBlob.length();
+			if (l>Integer.MAX_VALUE-10)
+				throw new SQLException();
+			setBlobImpl(parameterIndex, new ASQLConnectorBlob(theBlob.getBytes(1, (int) l)));
+		}
+	}
+
+
+	private void setBlobImpl(int parameterIndex, ASQLConnectorBlob theBlob) {
 		ensureCap(parameterIndex);
-		setObj(parameterIndex, Utils.getTypedBytesArray(theBlob));
+		setObj(parameterIndex, theBlob);
 	}
 
 	@Override
@@ -534,7 +556,7 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 	}
 
 	@Override
-	public void setBytes(int parameterIndex, byte[] theBytes) throws SQLException {
+	public void setBytes(int parameterIndex, byte[] theBytes) {
 		ensureCap(parameterIndex);
 		setObj(parameterIndex, Utils.getTypedBytesArray(theBytes));
 	}
@@ -546,18 +568,22 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 
 	@Override
 	public void setClob(int parameterIndex, Clob theClob) throws SQLException {
+		setBlobImpl(parameterIndex, new ASQLConnectorBlob(theClob));
 		ensureCap(parameterIndex);
-		setString(parameterIndex, theClob.getSubString(1L, (int) theClob.length()));
 	}
 
 	@Override
-	public void setDate(int parameterIndex, Date theDate) throws SQLException {
-		setTimestamp(parameterIndex, theDate != null ? new Timestamp(theDate.getTime()) : null);
+	public void setDate(int parameterIndex, Date theDate) {
+		ensureCap(parameterIndex);
+		setObj(parameterIndex, theDate.getTime());
 	}
 
 	@Override
-	public void setDate(int parameterIndex, Date theDate, Calendar cal) throws SQLException {
-		setTimestamp(parameterIndex, theDate != null ? new Timestamp(theDate.getTime()) : null);
+	public void setDate(int parameterIndex, Date theDate, Calendar cal) {
+		Calendar c=((Calendar)cal.clone());
+		c.setTimeInMillis(theDate.getTime());
+		ensureCap(parameterIndex);
+		setObj(parameterIndex, c.getTimeInMillis());
 	}
 
 	@Override
@@ -585,13 +611,13 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 	}
 
 	@Override
-	public void setNull(int parameterIndex, int sqlType) throws SQLException {
+	public void setNull(int parameterIndex, int sqlType) {
 		ensureCap(parameterIndex);
 		setObj(parameterIndex, null);
 	}
 
 	@Override
-	public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException {
+	public void setNull(int paramIndex, int sqlType, String typeName){
 		ensureCap(paramIndex);
 		setObj(paramIndex, null);
 	}
@@ -599,7 +625,23 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 	@Override
 	public void setObject(int parameterIndex, Object theObject) throws SQLException {
 		ensureCap(parameterIndex);
-		setObj(parameterIndex, theObject);
+		if (theObject==null)
+			setObj(parameterIndex, null);
+		else {
+			if (theObject instanceof BigDecimal)
+				setBigDecimal(parameterIndex, (BigDecimal) theObject);
+			else if (theObject.getClass()==byte[].class)
+				setBytes(parameterIndex, (byte[])theObject);
+			else if (theObject instanceof Blob)
+				setBlob(parameterIndex, (Blob)theObject);
+			else if (theObject instanceof Clob)
+				setClob(parameterIndex, (Clob)theObject);
+			else if (theObject instanceof String)
+				setString(parameterIndex, (String)theObject);
+			else
+				setObj(parameterIndex, theObject);
+		}
+
 	}
 
 	@Override
@@ -626,24 +668,27 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 	@Override
 	public void setString(int parameterIndex, String theString) {
 		ensureCap(parameterIndex);
-		setObj(parameterIndex, theString);
+		setObj(parameterIndex, Utils.getTypedString(theString));
 	}
 
 	@Override
 	public void setTime(int parameterIndex, Time theTime) throws SQLException {
-		// TODO: Test that this works
-		setObject(parameterIndex, theTime);
+		ensureCap(parameterIndex);
+		setObj(parameterIndex, theTime.getTime());
 	}
 
 	@Override
 	public void setTime(int parameterIndex, Time theTime, Calendar cal) throws SQLException {
-		setTime(parameterIndex, theTime);
+		ensureCap(parameterIndex);
+		Calendar c=((Calendar)cal.clone());
+		c.setTimeInMillis(theTime.getTime());
+		setObj(parameterIndex, c.getTimeInMillis());
 	}
 
 	@Override
 	public void setTimestamp(int parameterIndex, Timestamp theTimestamp) throws SQLException {
 		ensureCap(parameterIndex);
-		setObj(parameterIndex, theTimestamp);
+		setObj(parameterIndex, theTimestamp.getTime());
 	}
 
 	@Override
@@ -668,17 +713,17 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 	}
 
 	@Override
-	public boolean isPoolable() throws SQLException {
+	public boolean isPoolable() {
 		return poolable;
 	}
 
 	@Override
-	public void setPoolable(boolean poolable) throws SQLException {
+	public void setPoolable(boolean poolable) {
 		this.poolable = poolable;
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return iface != null && iface.isAssignableFrom(getClass());
 	}
 
@@ -735,8 +780,7 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 
 	@Override
 	public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-		// TODO setObject(parameterIndex, new ASQLConnectorBlob(inputStream, length));
-		throw new SQLFeatureNotSupportedException("setBlob not supported");
+		setBlob(parameterIndex, new ASQLConnectorBlob(inputStream, length));
 	}
 
 	@Override
@@ -765,8 +809,7 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 
 	@Override
 	public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
-		// TODO setClob(parameterIndex, new ASQLConnectorClob(reader, length));
-		throw new SQLFeatureNotSupportedException("setClob not supported");
+		setBlob(parameterIndex, new ASQLConnectorBlob(reader, length));
 	}
 
 	@Override

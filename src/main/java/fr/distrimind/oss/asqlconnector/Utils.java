@@ -2,71 +2,80 @@ package fr.distrimind.oss.asqlconnector;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.Base64;
 
 class Utils {
 
-	static byte[] getTypedBytesArray(Blob b) throws SQLException {
-		if (b instanceof ASQLConnectorBlob)
-			return getTypedBytesArray(((ASQLConnectorBlob) b).b);
-		else
-			return getTypedBytesArray(b.getBytes(1, (int) b.length()));
-	}
 
-	static byte[] getTypedBytesArray(byte[] t) {
+	static String getTypedBytesArray(byte[] t) {
 		if (t == null)
 			return null;
 		else {
-			byte[] r = new byte[t.length + 1];
-			r[0] = ASLConnectorBytesArrayType.BYTES_ARRAY_TYPE;
-			System.arraycopy(t, 0, r, 1, t.length);
-			return r;
+			String e=Base64.getEncoder().encodeToString(t);
+			return ASLConnectorStringType.BYTE_ARRAY_TYPE+e;
 		}
 	}
 
-	static byte[] getUntypedBytesArray(byte[] t) {
-		if (t == null)
+	static byte[] getUntypedBytesArray(String s) throws SQLException {
+		if (s == null || s.length()<2)
 			return null;
 		else {
-			byte[] r = new byte[t.length - 1];
-			System.arraycopy(t, 1, r, 0, r.length);
-			return r;
+			if (s.charAt(0)!=ASLConnectorStringType.BYTE_ARRAY_TYPE)
+				throw new SQLException();
+			return Base64.getDecoder().decode(s.substring(1));
+		}
+	}
+	static String getTypedString(String s) {
+		if (s == null)
+			return null;
+		else {
+			return ASLConnectorStringType.STRING_TYPE+s;
+		}
+	}
+
+	static String getUntypedString(String s) throws SQLException {
+		if (s == null || s.length()<2)
+			return null;
+		else {
+			if (s.charAt(0)!=ASLConnectorStringType.STRING_TYPE)
+				throw new SQLException();
+			return s.substring(1);
 		}
 	}
 
 
 	@SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-	static byte[] bigDecimalToBytes(BigDecimal bigDecimal) {
+	static String bigDecimalToString(BigDecimal bigDecimal) {
 		if (bigDecimal == null)
 			return null;
 		else {
 			byte[] tab = bigDecimal.unscaledValue().toByteArray();
-			byte[] res = new byte[tab.length + 5];
-			res[0] = ASLConnectorBytesArrayType.BIG_DECIMAL_TYPE;
-			System.arraycopy(tab, 0, res, 5, tab.length);
-			putInt(res, 1, bigDecimal.scale());
-			return res;
+			byte[] res = new byte[tab.length + 4];
+			System.arraycopy(tab, 0, res, 4, tab.length);
+			putInt(res, 0, bigDecimal.scale());
+			return ASLConnectorStringType.BIG_DECIMAL_TYPE+Base64.getEncoder().encodeToString(res);
 		}
 	}
 
-	static BigDecimal bigDecimalFromBytes(byte[] tab) {
-		if (tab == null)
+	static BigDecimal bigDecimalFromString(String s) {
+		if (s == null || s.length()<2)
 			return null;
 		else {
-			if (tab[0] != ASLConnectorBytesArrayType.BIG_DECIMAL_TYPE)
+			if (s.charAt(0) != ASLConnectorStringType.BIG_DECIMAL_TYPE)
 				throw new IllegalArgumentException();
-			byte[] t = new byte[tab.length - 5];
-			System.arraycopy(tab, 5, t, 0, t.length);
-			return new BigDecimal(new BigInteger(t), getInt(tab, 1));
+			byte[] tab=Base64.getDecoder().decode(s.substring(1));
+			byte[] t = new byte[tab.length - 4];
+			System.arraycopy(tab, 4, t, 0, t.length);
+			return new BigDecimal(new BigInteger(t), getInt(tab, 0));
 		}
 	}
 
-	static int getInt(byte[] b, int off) {
+	private static int getInt(byte[] b, int off) {
 		return ((b[off + 3] & 0xFF)) + ((b[off + 2] & 0xFF) << 8) + ((b[off + 1] & 0xFF) << 16) + ((b[off]) << 24);
 	}
 
-	static void putInt(byte[] b, int off, int val) {
+	private static void putInt(byte[] b, int off, int val) {
 		b[off] = (byte) (val >>> 24);
 		b[off + 1] = (byte) (val >>> 16);
 		b[off + 2] = (byte) (val >>> 8);
