@@ -255,7 +255,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	public byte[] getBytes(int index) throws SQLException {
 		try {
 			lastColumnRead = index;
-			return Utils.getUntypedBytesArray(getStringImpl(ci(index)));
+			return Utils.getUntypedBytesArray(getStringImpl(index));
 
 		} catch (android.database.SQLException e) {
 			throw ASQLConnectorConnection.chainException(e);

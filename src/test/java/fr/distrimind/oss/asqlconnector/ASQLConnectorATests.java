@@ -304,6 +304,33 @@ public class ASQLConnectorATests {
 		}
 		});
 		tests.add(new Object[]{
+				"shouldRetrieveSavedBlob", "arrays.db", (ITest) conn -> {
+			conn.createStatement().execute("create table arraytest (key int, value text)");
+
+			byte[] byteArray = randomByteArray();
+
+			final int id = 442;
+			try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO arraytest(key,value) VALUES (?, ?)")) {
+				stmt.setInt(1, id);
+				stmt.setBytes(2, byteArray);
+				stmt.executeUpdate();
+			}
+
+			try (PreparedStatement stmt = conn.prepareStatement("SELECT value,key FROM arraytest where key = ?")) {
+				stmt.setInt(1, id);
+				try (ResultSet rs = stmt.executeQuery()) {
+					Assert.assertTrue(rs.next());
+					Assert.assertEquals(id, rs.getInt(2));
+					byte[] array = rs.getBytes(1);
+					Assert.assertArrayEquals(byteArray, array);
+
+					array = (byte[]) rs.getObject(1);
+					Assert.assertArrayEquals(byteArray, array);
+				}
+			}
+		}
+		});
+		tests.add(new Object[]{
 				"shouldRetrieveSavedBlob", "blobs.db", (ITest) conn -> {
 			conn.createStatement().execute("create table blobtest (key int, value blob)");
 
@@ -389,7 +416,6 @@ public class ASQLConnectorATests {
 			conn.createStatement().execute("CREATE TABLE stringblobtest (value CLOB)");
 
 			String s = "a random test string";
-			byte[] byteArray = s.getBytes();
 
 			try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO stringblobtest (value) VALUES (?)")) {
 				stmt.setClob(1, new ASQLConnectorClob(s));
