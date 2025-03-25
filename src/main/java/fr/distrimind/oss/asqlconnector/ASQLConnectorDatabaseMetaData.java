@@ -265,6 +265,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 						c.close();
 					}
 				}
+
 			}
 		} finally {
 			if (rs != null) {

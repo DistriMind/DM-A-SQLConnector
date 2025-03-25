@@ -320,11 +320,10 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 
 	@Override
 	public ResultSet getGeneratedKeys() throws SQLException {
+		if (rowIdResultSet==null)
+			return ASQLConnectorEmptyResultSet.SINGLETON;
 		ResultSet tmp = rowIdResultSet;
-
-		if (rowIdResultSet != null) {
-			rowIdResultSet = null;  // so the next time it would be returned as null
-		}
+		rowIdResultSet = null;  // so the next time it would be returned as null
 		return tmp;
 	}
 

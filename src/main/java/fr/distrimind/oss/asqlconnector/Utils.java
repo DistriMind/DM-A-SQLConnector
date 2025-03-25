@@ -5,6 +5,11 @@ import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.Base64;
 
+/**
+ * @author Jason Mahdjoub
+ * @since DM-A-SQLConnector 1.0
+ * @version 1.O
+ */
 class Utils {
 
 

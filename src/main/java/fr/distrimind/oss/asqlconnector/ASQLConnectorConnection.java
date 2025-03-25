@@ -588,6 +588,7 @@ public class ASQLConnectorConnection implements Connection {
 		return generatedRowIdStatement.executeQuery();
 	}
 
+
 	/**
 	 * @return A cached prepare statement for the count of changed rows or create one and return that.
 	 * @throws SQLException if a problem occurs

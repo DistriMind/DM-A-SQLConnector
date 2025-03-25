@@ -7,6 +7,11 @@ import fr.distrimind.oss.flexilogxml.common.log.DMLogger;
 import fr.distrimind.oss.flexilogxml.common.log.Marker;
 import fr.distrimind.oss.flexilogxml.common.log.MarkerFactory;
 
+/**
+ * @author Jason Mahdjoub
+ * @since DM-A-SQLConnector 1.0
+ * @version 1.O
+ */
 public class Log {
 
 	private static final DMLogger logger= FlexiLogXML.getLoggerInstance("DM-A-SQLConnector");
