@@ -128,7 +128,7 @@ public class AndroidDriverUnitTest {
 
 		PreparedStatement stmt = con.prepareStatement(blobInserts[1]);
 		stmt.setInt(1, blobSize);
-		stmt.setBinaryStream(2, new ByteArrayInputStream(aBlob), aBlob.length);
+		stmt.setBlob(2, new ByteArrayInputStream(aBlob), aBlob.length);
 		stmt.execute();
 		b = selectBlob(con, blobSize);
 		assertEquals(" Correct Length ", blobSize, b.length());
@@ -139,7 +139,7 @@ public class AndroidDriverUnitTest {
 
 		stmt = con.prepareStatement(blobInserts[2]);
 		stmt.setInt(1, blobSize1);
-		stmt.setBinaryStream(2, new ByteArrayInputStream(aBlob1), aBlob1.length);
+		stmt.setBlob(2, new ByteArrayInputStream(aBlob1), aBlob1.length);
 		stmt.execute();
 		b = selectBlob(con, blobSize1);
 		assertEquals(" Correct 1 Length ", blobSize1, b.length());
@@ -149,7 +149,7 @@ public class AndroidDriverUnitTest {
 		}
 
 		stmt = con.prepareStatement(blobInserts[3]);
-		stmt.setBinaryStream(1, new ByteArrayInputStream(aBlob), aBlob.length);
+		stmt.setBlob(1, new ByteArrayInputStream(aBlob), aBlob.length);
 		stmt.execute();
 		b = selectBlob(con, 401);
 		assertEquals(" Correct Length ", blobSize, b.length());

@@ -39,7 +39,7 @@ class Utils {
 			return null;
 		else {
 			if (s.charAt(0)!=ASLConnectorStringType.STRING_TYPE)
-				throw new SQLException();
+				return s;
 			return s.substring(1);
 		}
 	}

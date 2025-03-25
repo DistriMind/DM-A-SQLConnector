@@ -207,7 +207,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 			return null;
 		}
 		if (b[0]!=ASQLConnectorBlobType.BYTE_ARRAY_TYPE)
-			throw new SQLException();
+			return new ASQLConnectorBlob(b);
 		ASQLConnectorBlob r=new ASQLConnectorBlob();
 		r.b=b;
 		return r;
