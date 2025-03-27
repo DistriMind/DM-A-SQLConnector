@@ -9,13 +9,15 @@ import java.sql.Types;
 
 public class ASQLConnectorResultSetMetaData implements ResultSetMetaData {
 
-	private static Method getType;
+	public static final String NOT_IMPLEMENTED = " ********************* not implemented @ ";
+	public static final String _LINE_ = " line ";
+	private static Method getTypeMethod;
 
 	static {
 		try {
-			getType = Cursor.class.getMethod("getType", int.class);
+			getTypeMethod = Cursor.class.getMethod("getType", int.class);
 		} catch (Exception e) {
-			getType = null;
+			getTypeMethod = null;
 		}
 	}
 
@@ -29,9 +31,9 @@ public class ASQLConnectorResultSetMetaData implements ResultSetMetaData {
 	}
 
 	static int getType(Cursor cursor, int column) {
-		if (getType != null) {
+		if (getTypeMethod != null) {
 			try {
-				return (Integer) getType.invoke(cursor, column);
+				return (Integer) getTypeMethod.invoke(cursor, column);
 			} catch (Exception ignored) {
 			}
 		}
@@ -44,34 +46,34 @@ public class ASQLConnectorResultSetMetaData implements ResultSetMetaData {
 	}
 
 	@Override
-	public String getColumnClassName(int column) throws SQLException {
+	public String getColumnClassName(int column) {
 		// TODO In Xerial this is implemented as return "java.lang.Object";
 		// TODO To a lookup based on getColumnType
 		throw new UnsupportedOperationException("getColumnClassName not implemented yet");
 	}
 
 	@Override
-	public int getColumnCount() throws SQLException {
+	public int getColumnCount() {
 		return cursor.getColumnCount();
 	}
 
 	@Override
-	public int getColumnDisplaySize(int column) throws SQLException {
+	public int getColumnDisplaySize(int column) {
 		return Integer.MAX_VALUE;
 	}
 
 	@Override
-	public String getColumnLabel(int column) throws SQLException {
+	public String getColumnLabel(int column) {
 		return cursor.getColumnName(column - 1);
 	}
 
 	@Override
-	public String getColumnName(int column) throws SQLException {
+	public String getColumnName(int column) {
 		return cursor.getColumnName(column - 1);
 	}
 
 	@Override
-	public int getColumnType(int column) throws SQLException {
+	public int getColumnType(int column) {
 		int oldPos = cursor.getPosition();
 		boolean moved = false;
 		if (cursor.isBeforeFirst() || cursor.isAfterLast()) {
@@ -129,88 +131,88 @@ public class ASQLConnectorResultSetMetaData implements ResultSetMetaData {
 	}
 
 	@Override
-	public int getPrecision(int column) throws SQLException {
+	public int getPrecision(int column) {
 		throw new UnsupportedOperationException("getPrecision not implemented yet");
 	}
 
 	@Override
-	public int getScale(int column) throws SQLException {
+	public int getScale(int column) {
 		throw new UnsupportedOperationException("getScale not implemented yet");
 	}
 
 	@Override
-	public String getSchemaName(int column) throws SQLException {
+	public String getSchemaName(int column) {
 		return "";
 	}
 
 	@Override
-	public String getTableName(int column) throws SQLException {
+	public String getTableName(int column) {
 		// TODO Supported in Xerial driver with db.column_table_name(stmt.pointer, checkCol(col))
 		throw new UnsupportedOperationException("getTableName not implemented yet");
 	}
 
 	@Override
-	public boolean isAutoIncrement(int column) throws SQLException {
+	public boolean isAutoIncrement(int column) {
 		throw new UnsupportedOperationException("isAutoIncrement not implemented yet");
 	}
 
 	@Override
-	public boolean isCaseSensitive(int column) throws SQLException {
+	public boolean isCaseSensitive(int column) {
 		return true;
 	}
 
 	@Override
-	public boolean isCurrency(int column) throws SQLException {
+	public boolean isCurrency(int column) {
 		return false;
 	}
 
 	@Override
-	public boolean isDefinitelyWritable(int column) throws SQLException {
+	public boolean isDefinitelyWritable(int column) {
 		// TODO Evaluate if this is a sufficient implementation (if so, delete comment and log)
-		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> NOT_IMPLEMENTED + DebugPrinter.getFileName() + _LINE_
 				+ DebugPrinter.getLineNumber());
 		return false;
 	}
 
 	@Override
-	public int isNullable(int column) throws SQLException {
+	public int isNullable(int column) {
 		throw new UnsupportedOperationException("isNullable not implemented yet");
 	}
 
 	@Override
-	public boolean isReadOnly(int column) throws SQLException {
+	public boolean isReadOnly(int column) {
 		// TODO Evaluate if the implementation is sufficient (if so, delete comment and log)
-		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> NOT_IMPLEMENTED + DebugPrinter.getFileName() + _LINE_
 				+ DebugPrinter.getLineNumber());
 		return true;
 	}
 
 	@Override
-	public boolean isSearchable(int column) throws SQLException {
+	public boolean isSearchable(int column) {
 		// TODO Evaluate if the implementation is sufficient (if so, delete comment and log)
-		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> NOT_IMPLEMENTED + DebugPrinter.getFileName() + _LINE_
 				+ DebugPrinter.getLineNumber());
 		return true;
 	}
 
 	@Override
-	public boolean isSigned(int column) throws SQLException {
+	public boolean isSigned(int column) {
 		// TODO Evaluate if the implementation is sufficient (if so, delete comment and log)
-		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> NOT_IMPLEMENTED + DebugPrinter.getFileName() + _LINE_
 				+ DebugPrinter.getLineNumber());
 		return true;
 	}
 
 	@Override
-	public boolean isWritable(int column) throws SQLException {
+	public boolean isWritable(int column) {
 		// TODO Evaluate if the implementation is sufficient (if so, delete comment and log)
-		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
+		Log.error(() -> NOT_IMPLEMENTED + DebugPrinter.getFileName() + _LINE_
 				+ DebugPrinter.getLineNumber());
 		return false;
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return iface != null && iface.isAssignableFrom(getClass());
 	}
 

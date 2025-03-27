@@ -75,6 +75,7 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
 		throw new SQLException();
 	}
@@ -105,6 +106,7 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public InputStream getUnicodeStream(int columnIndex) throws SQLException {
 		throw new SQLException();
 	}
@@ -155,6 +157,7 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
 		throw new SQLException();
 	}
@@ -185,6 +188,7 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public InputStream getUnicodeStream(String columnLabel) throws SQLException {
 		throw new SQLException();
 	}
@@ -200,7 +204,7 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	}
 
 	@Override
-	public void clearWarnings() throws SQLException {
+	public void clearWarnings() {
 
 	}
 
@@ -225,7 +229,7 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	}
 
 	@Override
-	public int findColumn(String columnLabel) throws SQLException {
+	public int findColumn(String columnLabel) {
 		return -1;
 	}
 
@@ -310,12 +314,12 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	}
 
 	@Override
-	public void setFetchDirection(int direction) throws SQLException {
+	public void setFetchDirection(int direction) {
 
 	}
 
 	@Override
-	public int getFetchDirection() throws SQLException {
+	public int getFetchDirection() {
 		return FETCH_FORWARD;
 	}
 
@@ -953,11 +957,11 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	public void updateNClob(String columnLabel, Reader reader) throws SQLException {
 		throw new SQLException();
 	}
-
+	@SuppressWarnings("PMD")
 	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
 		throw new SQLException();
 	}
-
+	@SuppressWarnings("PMD")
 	public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
 		throw new SQLException();
 	}
@@ -968,7 +972,7 @@ public class ASQLConnectorEmptyResultSet implements ResultSet {
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return false;
 	}
 }

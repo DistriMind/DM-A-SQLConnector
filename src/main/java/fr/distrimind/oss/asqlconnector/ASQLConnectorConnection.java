@@ -1,5 +1,7 @@
 package fr.distrimind.oss.asqlconnector;
 
+import fr.distrimind.oss.flexilogxml.common.ReflectionTools;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.sql.*;
@@ -20,7 +22,9 @@ public class ASQLConnectorConnection implements Connection {
 	 * Used to track the use of each instance, and close the database when last conneciton is closed.
 	 */
 	private static final Map<ASQLConnectorConnection, ASQLConnectorDatabase> clientMap =
-			new HashMap<ASQLConnectorConnection, ASQLConnectorDatabase>();
+			new HashMap<>();
+	public static final String BACK_SLASH = " \"";
+	public static final String BACK_SLASH2 = "\" ";
 	/**
 	 * Will have the value 9 or greater the version of SQLException has the constructor:
 	 * SQLException(Throwable theCause) otherwise false.
@@ -54,7 +58,7 @@ public class ASQLConnectorConnection implements Connection {
 	 * @param info Properties object with options.  Supported options are "timeout", "retry", and "shared".
 	 */
 	public ASQLConnectorConnection(String url, Properties info) throws SQLException {
-		Log.trace(() -> "ASQLConnectorConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.trace(() -> "ASQLConnectorConnection: " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 		Log.trace(() -> "New sqlite jdbc from url '" + url + "', " + "'" + info + "'");
 
 		this.url = url;
@@ -90,9 +94,9 @@ public class ASQLConnectorConnection implements Connection {
 				long optionValue;
 				try {
 					optionValue = Long.parseLong(optionValueString);
-					if (optionName.equals("timeout")) {
+					if ("timeout".equals(optionName)) {
 						timeout = optionValue;
-					} else if (optionName.equals("retry")) {
+					} else if ("retry".equals(optionName)) {
 						timeout = optionValue;
 						retryInterval = optionValue;
 					}
@@ -133,7 +137,7 @@ public class ASQLConnectorConnection implements Connection {
 		synchronized (dbMap) {
 			sqlitedb = dbMap.get(dbQname);
 			if (sqlitedb == null) {
-				Log.info(() -> "ASQLConnectorConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Opening new database: " + dbn);
+				Log.info(() -> "ASQLConnectorConnection: " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this + " Opening new database: " + dbn);
 				sqlitedb = new ASQLConnectorDatabase(dbQname, timeout, retryInterval, flags);
 				dbMap.put(dbQname, sqlitedb);
 			}
@@ -145,6 +149,7 @@ public class ASQLConnectorConnection implements Connection {
 	 * This will create and return an exception.  For API levels less than 9 this will return
 	 * a ASQLConnectorException, for later APIs it will return a SQLException.
 	 */
+	@SuppressWarnings("PMD.UnusedAssignment")
 	public static SQLException chainException(android.database.SQLException sqlException) {
 		if (sqlThrowable < 0 || sqlThrowable >= 9) {
 			try {
@@ -152,8 +157,8 @@ public class ASQLConnectorConnection implements Connection {
 				//return new SQLException (sqlException);
 				// creating by reflection is significantly slower, but since Exceptions should be unusual
 				// this should not be a performance issue.
-				final Constructor<?> c = SQLException.class.getDeclaredConstructor(new Class[]{Throwable.class});
-				return (SQLException) c.newInstance(new Object[]{sqlException});
+				final Constructor<?> c = SQLException.class.getDeclaredConstructor(Throwable.class);
+				return (SQLException) c.newInstance(sqlException);
 			} catch (Exception e) {
 				sqlThrowable = 1;
 			}
@@ -162,10 +167,10 @@ public class ASQLConnectorConnection implements Connection {
 		// to go through this clause and create a ASQLConnectorException
 		try {
 			// avoid a direct reference to the ASQLConnectorException so that app > API level 9 do not need that class.
-			final Constructor<?> c = ASQLConnectorConnection.class.getClassLoader().loadClass("fr.distrimind.oss.asqlconnector.ASQLConnectorException").getDeclaredConstructor(new Class[]{android.database.SQLException.class});
+			final Constructor<?> c = ReflectionTools.getClassLoader().loadClass("fr.distrimind.oss.asqlconnector.ASQLConnectorException").getDeclaredConstructor(android.database.SQLException.class);
 			// ASQLConnectorException is an instance of (direct subclass of) SQLException, so the cast below is correct although
 			// the instance created will always be a ASQLConnectorException
-			return (SQLException) c.newInstance(new Object[]{sqlException});
+			return (SQLException) c.newInstance(sqlException);
 		} catch (Exception e) {
 			return new SQLException("Unable to Chain SQLException " + sqlException.getMessage());
 		}
@@ -194,17 +199,17 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public void clearWarnings() throws SQLException {
+	public void clearWarnings() {
 	}
 
 	@Override
 	public void close() throws SQLException {
-		Log.trace(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.trace(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 		if (sqlitedb != null) {
 			synchronized (dbMap) {
 				clientMap.remove(this);
 				if (!clientMap.containsValue(sqlitedb)) {
-					Log.info(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Closing the database since since last connection was closed.");
+					Log.info(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this + " Closing the database since since last connection was closed.");
 					setAutoCommit(true);
 					sqlitedb.close();
 					dbMap.remove(sqlitedb.dbQname);
@@ -212,7 +217,7 @@ public class ASQLConnectorConnection implements Connection {
 			}
 			sqlitedb = null;
 		} else {
-			Log.error(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Duplicate close!");
+			Log.error(() -> "ASQLConnectorConnection.close(): " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this + " Duplicate close!");
 		}
 	}
 
@@ -222,14 +227,14 @@ public class ASQLConnectorConnection implements Connection {
 			throw new SQLException("database in auto-commit mode");
 		}
 		sqlitedb.setTransactionSuccessful();
-		Log.debug(() -> "END TRANSACTION  (commit) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.debug(() -> "END TRANSACTION  (commit) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 		sqlitedb.endTransaction();
-		Log.debug(() -> "BEGIN TRANSACTION (after commit) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.debug(() -> "BEGIN TRANSACTION (after commit) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 		sqlitedb.beginTransaction();
 	}
 
 	@Override
-	public Statement createStatement() throws SQLException {
+	public ASQLConnectorStatement createStatement() {
 		return new ASQLConnectorStatement(this);
 	}
 
@@ -253,7 +258,7 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public boolean getAutoCommit() throws SQLException {
+	public boolean getAutoCommit() {
 		return autoCommit;
 	}
 
@@ -266,28 +271,28 @@ public class ASQLConnectorConnection implements Connection {
 		if (autoCommit) {
 			if (sqlitedb.inTransaction()) { // to be on safe side.
 				sqlitedb.setTransactionSuccessful();
-				Log.debug(() -> "END TRANSACTION (autocommit on) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+				Log.debug(() -> "END TRANSACTION (autocommit on) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 				sqlitedb.endTransaction();
 			}
 		} else {
-			Log.debug(() -> "BEGIN TRANSACTION (autocommit off) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+			Log.debug(() -> "BEGIN TRANSACTION (autocommit off) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 			sqlitedb.beginTransaction();
 		}
 	}
 
 	@Override
-	public String getCatalog() throws SQLException {
+	public String getCatalog() {
 		return null;
 	}
 
 	@Override
-	public void setCatalog(String catalog) throws SQLException {
+	public void setCatalog(String catalog) {
 		// From spec:
 		// If the driver does not support catalogs, it will silently ignore this request.
 	}
 
 	@Override
-	public int getHoldability() throws SQLException {
+	public int getHoldability() {
 		return ResultSet.CLOSE_CURSORS_AT_COMMIT;
 	}
 
@@ -298,13 +303,13 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public DatabaseMetaData getMetaData() throws SQLException {
+	public DatabaseMetaData getMetaData() {
 		return new ASQLConnectorDatabaseMetaData(this);
 	}
 
 	@SuppressWarnings("MagicConstant")
 	@Override
-	public int getTransactionIsolation() throws SQLException {
+	public int getTransactionIsolation() {
 		return transactionIsolation;
 	}
 
@@ -328,7 +333,7 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public SQLWarning getWarnings() throws SQLException {
+	public SQLWarning getWarnings() {
 		// TODO: Is this a sufficient implementation? (If so, delete comment and logging)
 		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
 				+ DebugPrinter.getLineNumber());
@@ -336,7 +341,7 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public boolean isClosed() throws SQLException {
+	public boolean isClosed() {
 		// assuming that "isOpen" doesn't throw a locked exception..
 		if (sqlitedb != null && sqlitedb.getSqliteDatabase() != null) {
 			return !sqlitedb.getSqliteDatabase().isOpen();
@@ -345,7 +350,7 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public boolean isReadOnly() throws SQLException {
+	public boolean isReadOnly() {
 		return false;
 	}
 
@@ -357,7 +362,7 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public String nativeSQL(String sql) throws SQLException {
+	public String nativeSQL(String sql) {
 		return sql;
 	}
 
@@ -385,7 +390,7 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
+	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) {
 		return new ASQLConnectorPreparedStatement(sql, this, autoGeneratedKeys);
 	}
 
@@ -429,9 +434,9 @@ public class ASQLConnectorConnection implements Connection {
 		if (autoCommit) {
 			throw new SQLException("database in auto-commit mode");
 		}
-		Log.debug(() -> "END TRANSACTION (rollback) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.debug(() -> "END TRANSACTION (rollback) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 		sqlitedb.endTransaction();
-		Log.debug(() -> "BEGIN TRANSACTION (after rollback) " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
+		Log.debug(() -> "BEGIN TRANSACTION (after rollback) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 		sqlitedb.beginTransaction();
 	}
 
@@ -453,7 +458,7 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return iface != null && iface.isAssignableFrom(getClass());
 	}
 
@@ -499,59 +504,54 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	@Override
-	public Properties getClientInfo() throws SQLException {
+	public Properties getClientInfo() {
 		// TODO Evaluate if this is a sufficient implementation (if so, remove this comment)
 		return new Properties();
 	}
 
 	@Override
-	public void setClientInfo(Properties properties) throws SQLClientInfoException {
+	public void setClientInfo(Properties properties) {
 		// TODO Evaluate if this is a sufficient implementation (if so, remove this comment)
 	}
 
 	@Override
-	public String getClientInfo(String name) throws SQLException {
+	public String getClientInfo(String name) {
 		// TODO Evaluate if this is a sufficient implementation (if so, remove this comment)
 		return null;
 	}
 
 	@Override
-	public boolean isValid(int timeout) throws SQLException {
+	public boolean isValid(int timeout) {
 		// TODO createStatement().execute("select 1");
 		return true;
 	}
 
 	@Override
-	public void setClientInfo(String name, String value) throws SQLClientInfoException {
+	public void setClientInfo(String name, String value) {
 		// TODO Evaluate if this is a sufficient implementation (if so, remove this comment)
 	}
 
 	/**
 	 * @return Where the database is located.
 	 */
-	public String url() {
+	public String getURL() {
 		return url;
 	}
 
 	// methods added for JDK7 compilation
-
 	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
 		throw new SQLFeatureNotSupportedException("setNetworkTimeout not supported");
 	}
-
 	public int getNetworkTimeout() throws SQLException {
 		throw new SQLFeatureNotSupportedException("getNetworkTimeout not supported");
 	}
-
 	public void abort(Executor executor) throws SQLException {
 		close();
 	}
-
-	public String getSchema() throws SQLException {
+	public String getSchema() {
 		return null;
 	}
-
-	public void setSchema(String schema) throws SQLException {
+	public void setSchema(String schema) {
 	}
 
 	/**
@@ -568,7 +568,7 @@ public class ASQLConnectorConnection implements Connection {
 					// System.out.println("In ASQLConnectorConnection.changedRowsCount(), changedRows=" + changedRows);
 				}
 			}
-		} catch (SQLException e) {
+		} catch (SQLException ignored) {
 			// ignore
 		}
 		return changedRows;

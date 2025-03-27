@@ -39,7 +39,7 @@ public class ASQLConnectorDataSource implements DataSource {
 	}
 	private static final String logFileName="asqlconnector.log";
 	@Override
-	public PrintWriter getLogWriter() throws SQLException {
+	public PrintWriter getLogWriter() {
 		PrintWriter logWriter = null;
 
 		try {
@@ -51,7 +51,7 @@ public class ASQLConnectorDataSource implements DataSource {
 	}
 
 	@Override
-	public void setLogWriter(PrintWriter out) throws SQLException {
+	public void setLogWriter(PrintWriter out) {
 		try {
 			DriverManager.setLogWriter(new PrintWriter(logFileName));
 		} catch (FileNotFoundException e) {
@@ -60,12 +60,12 @@ public class ASQLConnectorDataSource implements DataSource {
 	}
 
 	@Override
-	public int getLoginTimeout() throws SQLException {
+	public int getLoginTimeout() {
 		return 0;
 	}
 
 	@Override
-	public void setLoginTimeout(int seconds) throws SQLException {
+	public void setLoginTimeout(int seconds) {
 	}
 
 	public String getDescription() {
@@ -93,7 +93,7 @@ public class ASQLConnectorDataSource implements DataSource {
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return iface != null && iface.isAssignableFrom(getClass());
 	}
 
@@ -105,8 +105,8 @@ public class ASQLConnectorDataSource implements DataSource {
 		}
 		throw new SQLException(getClass() + " does not wrap " + iface);
 	}
-
-	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+	@Override
+	public Logger getParentLogger() {
 		return null;
 	}
 

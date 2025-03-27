@@ -56,7 +56,7 @@ public class ASQLConnectorDriver implements java.sql.Driver {
 	 * sqllitePrefix ("jdbc:sqlite").
 	 */
 	@Override
-	public boolean acceptsURL(String url) throws SQLException {
+	public boolean acceptsURL(String url) {
 
 		return url.startsWith(aSQLConnectorPrefix) || url.startsWith(xerialPrefix);
 	}
@@ -77,7 +77,7 @@ public class ASQLConnectorDriver implements java.sql.Driver {
 	}
 
 	@Override
-	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
+	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) {
 		// TODO Evaluate if implementation is sufficient (if so, delete comment and log)
 		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
 				+ DebugPrinter.getLineNumber());

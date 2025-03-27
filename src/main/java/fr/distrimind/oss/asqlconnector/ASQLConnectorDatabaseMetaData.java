@@ -3,6 +3,7 @@ package fr.distrimind.oss.asqlconnector;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
+import fr.distrimind.oss.flexilogxml.common.FlexiLogXML;
 
 import java.sql.*;
 import java.util.*;
@@ -25,10 +26,13 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	 */
 	protected final static Pattern PK_NAMED_PATTERN =
 			Pattern.compile(".* constraint +(.*?) +primary +key *\\((.*?)\\).*", Pattern.CASE_INSENSITIVE);
-	private final static Map<String, Integer> RULE_MAP = new HashMap<String, Integer>();
+	private final static Map<String, Integer> RULE_MAP = new HashMap<>();
 	private static final int SQLITE_DONE = 101;
 	private static final String VIEW_TYPE = "VIEW";
 	private static final String TABLE_TYPE = "TABLE";
+	public static final String SELECT = "select ";
+	public static final String PARENTHESIS_END_SQL_QUERY = "');";
+	public static final String AS_DT_UNION = " as dt union";
 
 	static {
 		RULE_MAP.put("NO ACTION", importedKeyNoAction);
@@ -39,9 +43,17 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	ASQLConnectorConnection con;
-	private PreparedStatement getAttributes, getBestRowIdentifier, getCatalogs, getColumnPrivileges,
-			getProcedureColumns, getProcedures, getSuperTypes, getTablePrivileges, getTableTypes, getUDTs,
-			getVersionColumns;
+	private PreparedStatement psAttributes;
+	private PreparedStatement psBestRowIdentifier;
+	private PreparedStatement psCatalogs;
+	private PreparedStatement psColumnPrivileges;
+	private PreparedStatement psProcedureColumns;
+	private PreparedStatement psProcedures;
+	private PreparedStatement psSuperTypes;
+	private PreparedStatement psTablePrivileges;
+	private PreparedStatement psTableTypes;
+	private PreparedStatement psUDTs;
+	private PreparedStatement psVersionColumns;
 
 	public ASQLConnectorDatabaseMetaData(ASQLConnectorConnection con) {
 		this.con = con;
@@ -62,32 +74,32 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public boolean allProceduresAreCallable() throws SQLException {
+	public boolean allProceduresAreCallable() {
 		return false;
 	}
 
 	@Override
-	public boolean allTablesAreSelectable() throws SQLException {
+	public boolean allTablesAreSelectable() {
 		return true;
 	}
 
 	@Override
-	public boolean dataDefinitionCausesTransactionCommit() throws SQLException {
+	public boolean dataDefinitionCausesTransactionCommit() {
 		return false;
 	}
 
 	@Override
-	public boolean dataDefinitionIgnoredInTransactions() throws SQLException {
+	public boolean dataDefinitionIgnoredInTransactions() {
 		return false;
 	}
 
 	@Override
-	public boolean deletesAreDetected(int type) throws SQLException {
+	public boolean deletesAreDetected(int type) {
 		return false;
 	}
 
 	@Override
-	public boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
+	public boolean doesMaxRowSizeIncludeBlobs() {
 		return false;
 	}
 
@@ -95,8 +107,8 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	public ResultSet getAttributes(String catalog, String schemaPattern,
 								   String typeNamePattern, String attributeNamePattern)
 			throws SQLException {
-		if (getAttributes == null) {
-			getAttributes = con.prepareStatement("select null as TYPE_CAT, null as TYPE_SCHEM, " +
+		if (psAttributes == null) {
+			psAttributes = con.prepareStatement("select null as TYPE_CAT, null as TYPE_SCHEM, " +
 					"null as TYPE_NAME, null as ATTR_NAME, null as DATA_TYPE, " +
 					"null as ATTR_TYPE_NAME, null as ATTR_SIZE, null as DECIMAL_DIGITS, " +
 					"null as NUM_PREC_RADIX, null as NULLABLE, null as REMARKS, null as ATTR_DEF, " +
@@ -105,23 +117,23 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 					"null as SCOPE_SCHEMA, null as SCOPE_TABLE, null as SOURCE_DATA_TYPE limit 0;");
 		}
 
-		return getAttributes.executeQuery();
+		return psAttributes.executeQuery();
 	}
 
 	@Override
 	public ResultSet getBestRowIdentifier(String catalog, String schema,
 										  String table, int scope, boolean nullable) throws SQLException {
-		if (getBestRowIdentifier == null) {
-			getBestRowIdentifier = con.prepareStatement("select null as SCOPE, null as COLUMN_NAME, " +
+		if (psBestRowIdentifier == null) {
+			psBestRowIdentifier = con.prepareStatement("select null as SCOPE, null as COLUMN_NAME, " +
 					"null as DATA_TYPE, null as TYPE_NAME, null as COLUMN_SIZE, " +
 					"null as BUFFER_LENGTH, null as DECIMAL_DIGITS, null as PSEUDO_COLUMN limit 0;");
 		}
 
-		return getBestRowIdentifier.executeQuery();
+		return psBestRowIdentifier.executeQuery();
 	}
 
 	@Override
-	public String getCatalogSeparator() throws SQLException {
+	public String getCatalogSeparator() {
 		return ".";
 	}
 
@@ -132,25 +144,26 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 
 	@Override
 	public ResultSet getCatalogs() throws SQLException {
-		if (getCatalogs == null) {
-			getCatalogs = con.prepareStatement("select null as TABLE_CAT limit 0;");
+		if (psCatalogs == null) {
+			psCatalogs = con.prepareStatement("select null as TABLE_CAT limit 0;");
 		}
 
-		return getCatalogs.executeQuery();
+		return psCatalogs.executeQuery();
 	}
 
 	@Override
 	public ResultSet getColumnPrivileges(String c, String s, String t, String colPat) throws SQLException {
-		if (getColumnPrivileges == null) {
-			getColumnPrivileges = con.prepareStatement("select null as TABLE_CAT, null as TABLE_SCHEM, " +
+		if (psColumnPrivileges == null) {
+			psColumnPrivileges = con.prepareStatement("select null as TABLE_CAT, null as TABLE_SCHEM, " +
 					"null as TABLE_NAME, null as COLUMN_NAME, null as GRANTOR, null as GRANTEE, " +
 					"null as PRIVILEGE, null as IS_GRANTABLE limit 0;");
 		}
 
-		return getColumnPrivileges.executeQuery();
+		return psColumnPrivileges.executeQuery();
 	}
 
 	@Override
+	@SuppressWarnings({"PMD.UseTryWithResources", "PMD.CloseResource"})
 	public ResultSet getColumns(String catalog, String schemaPattern,
 								String tableNamePattern, String columnNamePattern) throws SQLException {
 
@@ -217,11 +230,9 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 		try {
 			rs = getTables(catalog, schemaPattern, tableNamePattern, types);
 			while (rs.next()) {
-				Cursor c = null;
-				try {
-					String tableName = rs.getString(3);
-					String pragmaStatement = "PRAGMA table_info('" + tableName + "')";   // ?)";  substitutions don't seem to work in a pragma statment...
-					c = db.rawQuery(pragmaStatement, new String[]{});
+				String tableName = rs.getString(3);
+				String pragmaStatement = "PRAGMA table_info('" + tableName + "')";   // ?)";  substitutions don't seem to work in a pragma statment...
+				try (Cursor c=db.rawQuery(pragmaStatement, new String[]{})){
 					MatrixCursor mc = new MatrixCursor(columnNames, c.getCount());
 					while (c.moveToNext()) {
 						Object[] column = columnValues.clone();
@@ -229,17 +240,17 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 						column[3] = c.getString(1);
 						String type = c.getString(2);
 						column[5] = type;
-						type = type.toUpperCase();
+						type = type.toUpperCase(FlexiLogXML.getLocale());
 						// types are (as far as I can tell, the pragma document is not specific):
-						if (type.equals("TEXT") || type.startsWith("CHAR")) {
+						if ("TEXT".equals(type) || type.startsWith("CHAR")) {
 							column[4] = java.sql.Types.VARCHAR;
-						} else if (type.equals("NUMERIC")) {
+						} else if ("NUMERIC".equals(type)) {
 							column[4] = java.sql.Types.NUMERIC;
 						} else if (type.startsWith("INT")) {
 							column[4] = java.sql.Types.INTEGER;
-						} else if (type.equals("REAL")) {
+						} else if ("REAL".equals(type)) {
 							column[4] = java.sql.Types.REAL;
-						} else if (type.equals("BLOB")) {
+						} else if ("BLOB".equals(type)) {
 							column[4] = java.sql.Types.BLOB;
 						} else {  // manufactured columns, eg select 100 as something from tablename, may not have a type.
 							column[4] = java.sql.Types.NULL;
@@ -260,12 +271,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				} catch (SQLException ignored) {
 					// failure of one query will no affect the others...
 					// this will already have been printed.  e.printStackTrace();
-				} finally {
-					if (c != null) {
-						c.close();
-					}
 				}
-
 			}
 		} finally {
 			if (rs != null) {
@@ -292,7 +298,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public Connection getConnection() throws SQLException {
+	public Connection getConnection() {
 		return con;
 	}
 
@@ -306,38 +312,38 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 			return getImportedKeys(pc, ps, pt);
 		}
 
-		String query = "select " + quote(pc) + " as PKTABLE_CAT, " +
+		String query = SELECT + quote(pc) + " as PKTABLE_CAT, " +
 				quote(ps) + " as PKTABLE_SCHEM, " + quote(pt) + " as PKTABLE_NAME, " +
 				"'' as PKCOLUMN_NAME, " + quote(fc) + " as FKTABLE_CAT, " +
 				quote(fs) + " as FKTABLE_SCHEM, " + quote(ft) + " as FKTABLE_NAME, " +
 				"'' as FKCOLUMN_NAME, -1 as KEY_SEQ, 3 as UPDATE_RULE, 3 as DELETE_RULE, '' as FK_NAME, '' as PK_NAME, " +
-				Integer.toString(importedKeyInitiallyDeferred) + " as DEFERRABILITY limit 0 ";
+				importedKeyInitiallyDeferred + " as DEFERRABILITY limit 0 ";
 
 		return con.createStatement().executeQuery(query);
 	}
 
 	@Override
-	public int getDatabaseMajorVersion() throws SQLException {
+	public int getDatabaseMajorVersion() {
 		return con.getDb().getSqliteDatabase().getVersion();
 	}
 
 	@Override
-	public int getDatabaseMinorVersion() throws SQLException {
+	public int getDatabaseMinorVersion() {
 		return 0;
 	}
 
 	@Override
-	public String getDatabaseProductName() throws SQLException {
+	public String getDatabaseProductName() {
 		return "SQLite for Android";
 	}
 
 	@Override
-	public String getDatabaseProductVersion() throws SQLException {
+	public String getDatabaseProductVersion() {
 		return "";
 	}
 
 	@Override
-	public int getDefaultTransactionIsolation() throws SQLException {
+	public int getDefaultTransactionIsolation() {
 		return Connection.TRANSACTION_SERIALIZABLE;
 	}
 
@@ -352,319 +358,334 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public String getDriverName() throws SQLException {
+	public String getDriverName() {
 		return "DM-A-SQLConnector";
 	}
 
 	@Override
-	public String getDriverVersion() throws SQLException {
+	public String getDriverVersion() {
 		return "0.0.1 alpha";
 	}
 
 	@Override
-	public ResultSet getExportedKeys(String catalog, String schema, String table)
+	@SuppressWarnings("PMD.UseTryWithResources")
+	public ResultSet getExportedKeys(String _catalog, String _schema, String table)
 			throws SQLException {
 		PrimaryKeyFinder pkFinder = new PrimaryKeyFinder(table);
-		String[] pkColumns = pkFinder.getColumns();
-		Statement stat = con.createStatement();
+		List<String> pkColumns = pkFinder.getColumns();
+		try(final ASQLConnectorStatement stat = con.createStatement()) {
 
-		catalog = (catalog != null) ? quote(catalog) : null;
-		schema = (schema != null) ? quote(schema) : null;
+			String catalog = (_catalog != null) ? quote(_catalog) : null;
+			String schema = (_schema != null) ? quote(_schema) : null;
 
-		StringBuilder exportedKeysQuery = new StringBuilder(512);
+			StringBuilder exportedKeysQuery = new StringBuilder(512);
 
-		int count = 0;
-		if (pkColumns != null) {
-			// retrieve table list
-			ResultSet rs = stat.executeQuery("select name from sqlite_master where type = 'table'");
-			ArrayList<String> tableList = new ArrayList<String>();
+			int count = 0;
+			if (pkColumns != null) {
+				// retrieve table list
+				ResultSet rs = stat.executeQuery("select name from sqlite_master where type = 'table'");
+				List<String> tableList = new ArrayList<>();
 
-			while (rs.next()) {
-				tableList.add(rs.getString(1));
-			}
-
-			rs.close();
-
-			ResultSet fk = null;
-			String target = table.toLowerCase();
-			// find imported keys for each table
-			for (String tbl : tableList) {
-				try {
-					fk = stat.executeQuery("pragma foreign_key_list('" + escape(tbl) + "')");
-				} catch (SQLException e) {
-					if (e.getErrorCode() == SQLITE_DONE)
-						continue; // expected if table has no foreign keys
-
-					throw e;
+				while (rs.next()) {
+					tableList.add(rs.getString(1));
 				}
 
-				Statement stat2 = null;
-				try {
-					stat2 = con.createStatement();
+				rs.close();
 
-					while (fk.next()) {
-						int keySeq = fk.getInt(2) + 1;
-						String PKTabName = fk.getString(3).toLowerCase();
+				String target = table.toLowerCase(FlexiLogXML.getLocale());
+				// find imported keys for each table
+				for (String tbl : tableList) {
+					ResultSet fk;
+					try {
+						fk = stat.executeQuery("pragma foreign_key_list('" + escape(tbl) + "')");
+					} catch (SQLException e) {
+						if (e.getErrorCode() == SQLITE_DONE)
+							continue; // expected if table has no foreign keys
 
-						if (PKTabName == null || !PKTabName.equals(target)) {
-							continue;
-						}
+						throw e;
+					}
 
-						String PKColName = fk.getString(5);
-						PKColName = (PKColName == null) ? pkColumns[0] : PKColName.toLowerCase();
+					Statement stat2 = null;
+					try {
+						stat2 = con.createStatement();
 
-						exportedKeysQuery
-								.append(count > 0 ? " union all select " : "select ")
-								.append(Integer.toString(keySeq)).append(" as ks, lower('")
-								.append(escape(tbl)).append("') as fkt, lower('")
-								.append(escape(fk.getString(4))).append("') as fcn, '")
-								.append(escape(PKColName)).append("' as pcn, ")
-								.append(RULE_MAP.get(fk.getString(6))).append(" as ur, ")
-								.append(RULE_MAP.get(fk.getString(7))).append(" as dr, ");
+						while (fk.next()) {
+							int keySeq = fk.getInt(2) + 1;
+							String PKTabName = fk.getString(3);
+							if (PKTabName != null)
+								PKTabName = PKTabName.toLowerCase(FlexiLogXML.getLocale());
 
-						rs = stat2.executeQuery("select sql from sqlite_master where" +
-								" lower(name) = lower('" + escape(tbl) + "')");
-
-						if (rs.next()) {
-							Matcher matcher = FK_NAMED_PATTERN.matcher(rs.getString(1));
-
-							if (matcher.find()) {
-								exportedKeysQuery.append("'").append(escape(matcher.group(1).toLowerCase())).append("' as fkn");
-							} else {
-								exportedKeysQuery.append("'' as fkn");
+							if (PKTabName == null || !PKTabName.equals(target)) {
+								continue;
 							}
-						}
 
-						rs.close();
-						count++;
-					}
-				} finally {
-					try {
-						if (rs != null) rs.close();
-					} catch (SQLException ignored) {
-					}
-					try {
-						if (stat2 != null) stat2.close();
-					} catch (SQLException ignored) {
-					}
-					try {
-						if (fk != null) fk.close();
-					} catch (SQLException ignored) {
+							String PKColName = fk.getString(5);
+							PKColName = (PKColName == null) ? pkColumns.get(0) : PKColName.toLowerCase(FlexiLogXML.getLocale());
+
+							exportedKeysQuery
+									.append(count > 0 ? " union all select " : SELECT)
+									.append(keySeq).append(" as ks, lower('")
+									.append(escape(tbl)).append("') as fkt, lower('")
+									.append(escape(fk.getString(4))).append("') as fcn, '")
+									.append(escape(PKColName)).append("' as pcn, ")
+									.append(RULE_MAP.get(fk.getString(6))).append(" as ur, ")
+									.append(RULE_MAP.get(fk.getString(7))).append(" as dr, ");
+
+							rs = stat2.executeQuery("select sql from sqlite_master where" +
+									" lower(name) = lower('" + escape(tbl) + "')");
+
+							if (rs.next()) {
+								Matcher matcher = FK_NAMED_PATTERN.matcher(rs.getString(1));
+
+								if (matcher.find()) {
+									exportedKeysQuery.append("'").append(escape(Objects.requireNonNull(matcher.group(1)).toLowerCase(FlexiLogXML.getLocale()))).append("' as fkn");
+								} else {
+									exportedKeysQuery.append("'' as fkn");
+								}
+							}
+
+							rs.close();
+							count++;
+						}
+					} finally {
+						try {
+							if (rs != null) rs.close();
+						} catch (SQLException ignored) {
+						}
+						try {
+							if (stat2 != null) stat2.close();
+						} catch (SQLException ignored) {
+						}
+						try {
+							if (fk != null) fk.close();
+						} catch (SQLException ignored) {
+						}
 					}
 				}
 			}
+
+			boolean hasImportedKey = (count > 0);
+			StringBuilder sql = new StringBuilder(512);
+			sql.append(SELECT)
+					.append(catalog).append(" as PKTABLE_CAT, ")
+					.append(schema).append(" as PKTABLE_SCHEM, ")
+					.append(quote(table)).append(" as PKTABLE_NAME, ")
+					.append(hasImportedKey ? "pcn" : "''").append(" as PKCOLUMN_NAME, ")
+					.append(catalog).append(" as FKTABLE_CAT, ")
+					.append(schema).append(" as FKTABLE_SCHEM, ")
+					.append(hasImportedKey ? "fkt" : "''").append(" as FKTABLE_NAME, ")
+					.append(hasImportedKey ? "fcn" : "''").append(" as FKCOLUMN_NAME, ")
+					.append(hasImportedKey ? "ks" : "-1").append(" as KEY_SEQ, ")
+					.append(hasImportedKey ? "ur" : "3").append(" as UPDATE_RULE, ")
+					.append(hasImportedKey ? "dr" : "3").append(" as DELETE_RULE, ")
+					.append(hasImportedKey ? "fkn" : "''").append(" as FK_NAME, ")
+					.append(pkFinder.getName() != null ? pkFinder.getName() : "''").append(" as PK_NAME, ")
+					.append(importedKeyInitiallyDeferred) // FIXME: Check for pragma foreign_keys = true ?
+					.append(" as DEFERRABILITY ");
+
+			if (hasImportedKey) {
+				sql.append("from (").append(exportedKeysQuery).append(") order by fkt");
+			} else {
+				sql.append("limit 0");
+			}
+
+			ResultSet rs = stat.executeQuery(sql.toString());
+			stat.freeResultSetWithoutClosingIt();
+			return rs;
 		}
-
-		boolean hasImportedKey = (count > 0);
-		StringBuilder sql = new StringBuilder(512);
-		sql.append("select ")
-				.append(catalog).append(" as PKTABLE_CAT, ")
-				.append(schema).append(" as PKTABLE_SCHEM, ")
-				.append(quote(table)).append(" as PKTABLE_NAME, ")
-				.append(hasImportedKey ? "pcn" : "''").append(" as PKCOLUMN_NAME, ")
-				.append(catalog).append(" as FKTABLE_CAT, ")
-				.append(schema).append(" as FKTABLE_SCHEM, ")
-				.append(hasImportedKey ? "fkt" : "''").append(" as FKTABLE_NAME, ")
-				.append(hasImportedKey ? "fcn" : "''").append(" as FKCOLUMN_NAME, ")
-				.append(hasImportedKey ? "ks" : "-1").append(" as KEY_SEQ, ")
-				.append(hasImportedKey ? "ur" : "3").append(" as UPDATE_RULE, ")
-				.append(hasImportedKey ? "dr" : "3").append(" as DELETE_RULE, ")
-				.append(hasImportedKey ? "fkn" : "''").append(" as FK_NAME, ")
-				.append(pkFinder.getName() != null ? pkFinder.getName() : "''").append(" as PK_NAME, ")
-				.append(Integer.toString(importedKeyInitiallyDeferred)) // FIXME: Check for pragma foreign_keys = true ?
-				.append(" as DEFERRABILITY ");
-
-		if (hasImportedKey) {
-			sql.append("from (").append(exportedKeysQuery).append(") order by fkt");
-		} else {
-			sql.append("limit 0");
-		}
-
-		return stat.executeQuery(sql.toString());
 	}
 
 	@Override
-	public String getExtraNameCharacters() throws SQLException {
+	public String getExtraNameCharacters()  {
 		return "";
 	}
 
 	@Override
-	public String getIdentifierQuoteString() throws SQLException {
+	public String getIdentifierQuoteString() {
 		return " ";
 	}
 
 	@Override
+	@SuppressWarnings("PMD.CheckResultSet")
 	public ResultSet getImportedKeys(String catalog, String schema, String table)
 			throws SQLException {
-		ResultSet rs = null;
-		Statement stat = con.createStatement();
-		StringBuilder sql = new StringBuilder(700);
 
-		sql.append("select ").append(quote(catalog)).append(" as PKTABLE_CAT, ")
-				.append(quote(schema)).append(" as PKTABLE_SCHEM, ")
-				.append("ptn as PKTABLE_NAME, pcn as PKCOLUMN_NAME, ")
-				.append(quote(catalog)).append(" as FKTABLE_CAT, ")
-				.append(quote(schema)).append(" as FKTABLE_SCHEM, ")
-				.append(quote(table)).append(" as FKTABLE_NAME, ")
-				.append("fcn as FKCOLUMN_NAME, ks as KEY_SEQ, ur as UPDATE_RULE, dr as DELETE_RULE, '' as FK_NAME, '' as PK_NAME, ")
-				.append(Integer.toString(importedKeyInitiallyDeferred)).append(" as DEFERRABILITY from (");
+		try(ASQLConnectorStatement stat = con.createStatement()) {
+			StringBuilder sql = new StringBuilder(700);
 
-		// Use a try catch block to avoid "query does not return ResultSet" error
-		try {
-			rs = stat.executeQuery("pragma foreign_key_list('" + escape(table) + "');");
-		} catch (SQLException e) {
-			sql.append("select -1 as ks, '' as ptn, '' as fcn, '' as pcn, ")
-					.append(importedKeyNoAction).append(" as ur, ")
-					.append(importedKeyNoAction).append(" as dr) limit 0;");
+			sql.append(SELECT).append(quote(catalog)).append(" as PKTABLE_CAT, ")
+					.append(quote(schema)).append(" as PKTABLE_SCHEM, ")
+					.append("ptn as PKTABLE_NAME, pcn as PKCOLUMN_NAME, ")
+					.append(quote(catalog)).append(" as FKTABLE_CAT, ")
+					.append(quote(schema)).append(" as FKTABLE_SCHEM, ")
+					.append(quote(table)).append(" as FKTABLE_NAME, ")
+					.append("fcn as FKCOLUMN_NAME, ks as KEY_SEQ, ur as UPDATE_RULE, dr as DELETE_RULE, '' as FK_NAME, '' as PK_NAME, ")
+					.append(importedKeyInitiallyDeferred).append(" as DEFERRABILITY from (");
 
-			return stat.executeQuery(sql.toString());
-		}
+			// Use a try catch block to avoid "query does not return ResultSet" error
+			ResultSet rs;
+			try {
+				rs = stat.executeQuery("pragma foreign_key_list('" + escape(table) + PARENTHESIS_END_SQL_QUERY);
+			} catch (SQLException e) {
+				sql.append("select -1 as ks, '' as ptn, '' as fcn, '' as pcn, ")
+						.append(importedKeyNoAction).append(" as ur, ")
+						.append(importedKeyNoAction).append(" as dr) limit 0;");
 
-		boolean rsHasNext = false;
-
-		for (int i = 0; rs.next(); i++) {
-			rsHasNext = true;
-			int keySeq = rs.getInt(2) + 1;
-			String PKTabName = rs.getString(3);
-			String FKColName = rs.getString(4);
-			String PKColName = rs.getString(5);
-
-			if (PKColName == null) {
-				PKColName = new PrimaryKeyFinder(PKTabName).getColumns()[0];
+				return stat.executeQuery(sql.toString());
 			}
 
-			String updateRule = rs.getString(6);
-			String deleteRule = rs.getString(7);
+			boolean rsHasNext = false;
 
-			if (i > 0) {
-				sql.append(" union all ");
+			for (int i = 0; rs.next(); i++) {
+				rsHasNext = true;
+				int keySeq = rs.getInt(2) + 1;
+				String PKTabName = rs.getString(3);
+				String FKColName = rs.getString(4);
+				String PKColName = rs.getString(5);
+
+				if (PKColName == null) {
+					PKColName = new PrimaryKeyFinder(PKTabName).getColumns().get(0);
+				}
+
+				String updateRule = rs.getString(6);
+				String deleteRule = rs.getString(7);
+
+				if (i > 0) {
+					sql.append(" union all ");
+				}
+
+				sql.append(SELECT).append(keySeq).append(" as ks,")
+						.append("'").append(escape(PKTabName)).append("' as ptn, '")
+						.append(escape(FKColName)).append("' as fcn, '")
+						.append(escape(PKColName)).append("' as pcn,")
+						.append("case '").append(escape(updateRule)).append("'")
+						.append(" when 'NO ACTION' then ").append(importedKeyNoAction)
+						.append(" when 'CASCADE' then ").append(importedKeyCascade)
+						.append(" when 'RESTRICT' then ").append(importedKeyRestrict)
+						.append(" when 'SET NULL' then ").append(importedKeySetNull)
+						.append(" when 'SET DEFAULT' then ").append(importedKeySetDefault).append(" end as ur, ")
+						.append("case '").append(escape(deleteRule)).append("'")
+						.append(" when 'NO ACTION' then ").append(importedKeyNoAction)
+						.append(" when 'CASCADE' then ").append(importedKeyCascade)
+						.append(" when 'RESTRICT' then ").append(importedKeyRestrict)
+						.append(" when 'SET NULL' then ").append(importedKeySetNull)
+						.append(" when 'SET DEFAULT' then ").append(importedKeySetDefault).append(" end as dr");
+			}
+			rs.close();
+
+			if (!rsHasNext) {
+				sql.append("select -1 as ks, '' as ptn, '' as fcn, '' as pcn, ")
+						.append(importedKeyNoAction).append(" as ur, ")
+						.append(importedKeyNoAction).append(" as dr) limit 0;");
 			}
 
-			sql.append("select ").append(keySeq).append(" as ks,")
-					.append("'").append(escape(PKTabName)).append("' as ptn, '")
-					.append(escape(FKColName)).append("' as fcn, '")
-					.append(escape(PKColName)).append("' as pcn,")
-					.append("case '").append(escape(updateRule)).append("'")
-					.append(" when 'NO ACTION' then ").append(importedKeyNoAction)
-					.append(" when 'CASCADE' then ").append(importedKeyCascade)
-					.append(" when 'RESTRICT' then ").append(importedKeyRestrict)
-					.append(" when 'SET NULL' then ").append(importedKeySetNull)
-					.append(" when 'SET DEFAULT' then ").append(importedKeySetDefault).append(" end as ur, ")
-					.append("case '").append(escape(deleteRule)).append("'")
-					.append(" when 'NO ACTION' then ").append(importedKeyNoAction)
-					.append(" when 'CASCADE' then ").append(importedKeyCascade)
-					.append(" when 'RESTRICT' then ").append(importedKeyRestrict)
-					.append(" when 'SET NULL' then ").append(importedKeySetNull)
-					.append(" when 'SET DEFAULT' then ").append(importedKeySetDefault).append(" end as dr");
+			rs = stat.executeQuery(sql.append(");").toString());
+			stat.freeResultSetWithoutClosingIt();
+			return rs;
 		}
-		rs.close();
-
-		if (!rsHasNext) {
-			sql.append("select -1 as ks, '' as ptn, '' as fcn, '' as pcn, ")
-					.append(importedKeyNoAction).append(" as ur, ")
-					.append(importedKeyNoAction).append(" as dr) limit 0;");
-		}
-
-		return stat.executeQuery(sql.append(");").toString());
 	}
 
 	@Override
 	public ResultSet getIndexInfo(String catalog, String schema, String table,
 								  boolean unique, boolean approximate) throws SQLException {
-		ResultSet rs = null;
-		Statement stat = con.createStatement();
-		StringBuilder sql = new StringBuilder(500);
 
-		sql.append("select null as TABLE_CAT, null as TABLE_SCHEM, '")
-				.append(escape(table)).append("' as TABLE_NAME, un as NON_UNIQUE, null as INDEX_QUALIFIER, n as INDEX_NAME, ")
-				.append(Integer.toString(tableIndexOther)).append(" as TYPE, op as ORDINAL_POSITION, ")
-				.append("cn as COLUMN_NAME, null as ASC_OR_DESC, 0 as CARDINALITY, 0 as PAGES, null as FILTER_CONDITION from (");
+		try(ASQLConnectorStatement stat = con.createStatement()) {
+			StringBuilder sql = new StringBuilder(500);
 
-		// Use a try catch block to avoid "query does not return ResultSet" error
-		try {
-			rs = stat.executeQuery("pragma index_list('" + escape(table) + "');");
-		} catch (SQLException e) {
-			sql.append("select null as un, null as n, null as op, null as cn) limit 0;");
+			sql.append("select null as TABLE_CAT, null as TABLE_SCHEM, '")
+					.append(escape(table)).append("' as TABLE_NAME, un as NON_UNIQUE, null as INDEX_QUALIFIER, n as INDEX_NAME, ")
+					.append(Integer.toString(tableIndexOther)).append(" as TYPE, op as ORDINAL_POSITION, ")
+					.append("cn as COLUMN_NAME, null as ASC_OR_DESC, 0 as CARDINALITY, 0 as PAGES, null as FILTER_CONDITION from (");
 
-			return stat.executeQuery(sql.toString());
-		}
+			// Use a try catch block to avoid "query does not return ResultSet" error
+			ResultSet rs;
+			try {
+				rs = stat.executeQuery("pragma index_list('" + escape(table) + PARENTHESIS_END_SQL_QUERY);
+			} catch (SQLException e) {
+				sql.append("select null as un, null as n, null as op, null as cn) limit 0;");
 
-		ArrayList<ArrayList<Object>> indexList = new ArrayList<ArrayList<Object>>();
-		while (rs.next()) {
-			indexList.add(new ArrayList<Object>());
-			indexList.get(indexList.size() - 1).add(rs.getString(2));
-			indexList.get(indexList.size() - 1).add(rs.getInt(3));
-		}
-		rs.close();
-
-		int i = 0;
-		Iterator<ArrayList<Object>> indexIterator = indexList.iterator();
-		ArrayList<Object> currentIndex;
-
-		while (indexIterator.hasNext()) {
-			currentIndex = indexIterator.next();
-			String indexName = currentIndex.get(0).toString();
-			rs = stat.executeQuery("pragma index_info('" + escape(indexName) + "');");
-
-			while (rs.next()) {
-				if (i++ > 0) {
-					sql.append(" union all ");
-				}
-
-				sql.append("select ").append(Integer.toString(1 - (Integer) currentIndex.get(1))).append(" as un,'")
-						.append(escape(indexName)).append("' as n,")
-						.append(Integer.toString(rs.getInt(1) + 1)).append(" as op,'")
-						.append(escape(rs.getString(3))).append("' as cn");
+				return stat.executeQuery(sql.toString());
 			}
 
+			List<List<Object>> indexList = new ArrayList<>();
+			while (rs.next()) {
+				indexList.add(new ArrayList<>());
+				indexList.get(indexList.size() - 1).add(rs.getString(2));
+				indexList.get(indexList.size() - 1).add(rs.getInt(3));
+			}
 			rs.close();
-		}
 
-		return stat.executeQuery(sql.append(");").toString());
+			int i = 0;
+			Iterator<List<Object>> indexIterator = indexList.iterator();
+			List<Object> currentIndex;
+
+			while (indexIterator.hasNext()) {
+				currentIndex = indexIterator.next();
+				String indexName = currentIndex.get(0).toString();
+				rs = stat.executeQuery("pragma index_info('" + escape(indexName) + PARENTHESIS_END_SQL_QUERY);
+
+				while (rs.next()) {
+					if (i++ > 0) {
+						sql.append(" union all ");
+					}
+
+					sql.append(SELECT).append(1 - (Integer) currentIndex.get(1)).append(" as un,'")
+							.append(escape(indexName)).append("' as n,")
+							.append(rs.getInt(1) + 1).append(" as op,'")
+							.append(escape(rs.getString(3))).append("' as cn");
+				}
+
+				rs.close();
+			}
+
+			rs=stat.executeQuery(sql.append(");").toString());
+			stat.freeResultSetWithoutClosingIt();
+			return rs;
+		}
 	}
 
 	@Override
-	public int getJDBCMajorVersion() throws SQLException {
+	public int getJDBCMajorVersion() {
 		return 2;
 	}
 
 	@Override
-	public int getJDBCMinorVersion() throws SQLException {
+	public int getJDBCMinorVersion() {
 		return 1;
 	}
 
 	@Override
-	public int getMaxBinaryLiteralLength() throws SQLException {
+	public int getMaxBinaryLiteralLength() {
 		return 0;
 	}
 
 	@Override
-	public int getMaxCatalogNameLength() throws SQLException {
+	public int getMaxCatalogNameLength() {
 		return 0;
 	}
 
 	@Override
-	public int getMaxCharLiteralLength() throws SQLException {
+	public int getMaxCharLiteralLength() {
 		return 0;
 	}
 
 	@Override
-	public int getMaxColumnNameLength() throws SQLException {
+	public int getMaxColumnNameLength() {
 		return 0;
 	}
 
 	@Override
-	public int getMaxColumnsInGroupBy() throws SQLException {
+	public int getMaxColumnsInGroupBy() {
 		return 0;
 	}
 
 	@Override
-	public int getMaxColumnsInIndex() throws SQLException {
+	public int getMaxColumnsInIndex() {
 		return 0;
 	}
 
 	@Override
-	public int getMaxColumnsInOrderBy() throws SQLException {
+	public int getMaxColumnsInOrderBy() {
 		return 0;
 	}
 
@@ -734,7 +755,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public String getNumericFunctions() throws SQLException {
+	public String getNumericFunctions() {
 		return "";
 	}
 
@@ -744,145 +765,146 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 		final Object[] columnValues = new Object[]{null, null, null, null, null, null};
 		ASQLConnectorDatabase db = con.getDb();
 
-		Cursor c = db.rawQuery("pragma table_info('" + table + "')", new String[]{});
-		MatrixCursor mc = new MatrixCursor(columnNames);
-		while (c.moveToNext()) {
-			if (c.getInt(5) > 0) {
-				Object[] column = columnValues.clone();
-				column[2] = table;
-				column[3] = c.getString(1);
-				mc.addRow(column);
+		try(Cursor c = db.rawQuery("pragma table_info('" + table + "')", new String[]{})) {
+			MatrixCursor mc = new MatrixCursor(columnNames);
+			while (c.moveToNext()) {
+				if (c.getInt(5) > 0) {
+					Object[] column = columnValues.clone();
+					column[2] = table;
+					column[3] = c.getString(1);
+					mc.addRow(column);
+				}
 			}
+			// The matrix cursor should be sorted by column name, but isn't
+			return new ASQLConnectorResultSet(mc);
 		}
-		// The matrix cursor should be sorted by column name, but isn't
-		c.close();
-		return new ASQLConnectorResultSet(mc);
+
 	}
 
 	@Override
 	public ResultSet getProcedureColumns(String c, String s, String p, String colPat) throws SQLException {
-		if (getProcedures == null) {
-			getProcedureColumns = con.prepareStatement("select null as PROCEDURE_CAT, " +
+		if (psProcedures == null) {
+			psProcedureColumns = con.prepareStatement("select null as PROCEDURE_CAT, " +
 					"null as PROCEDURE_SCHEM, null as PROCEDURE_NAME, null as COLUMN_NAME, " +
 					"null as COLUMN_TYPE, null as DATA_TYPE, null as TYPE_NAME, null as PRECISION, " +
 					"null as LENGTH, null as SCALE, null as RADIX, null as NULLABLE, " +
 					"null as REMARKS limit 0;");
 		}
-		return getProcedureColumns.executeQuery();
+		return psProcedureColumns.executeQuery();
 
 	}
 
 	@Override
-	public String getProcedureTerm() throws SQLException {
+	public String getProcedureTerm() {
 		return "not_implemented";
 	}
 
 	@Override
 	public ResultSet getProcedures(String catalog, String schemaPattern,
 								   String procedureNamePattern) throws SQLException {
-		if (getProcedures == null) {
-			getProcedures = con.prepareStatement("select null as PROCEDURE_CAT, null as PROCEDURE_SCHEM, " +
+		if (psProcedures == null) {
+			psProcedures = con.prepareStatement("select null as PROCEDURE_CAT, null as PROCEDURE_SCHEM, " +
 					"null as PROCEDURE_NAME, null as UNDEF1, null as UNDEF2, null as UNDEF3, " +
 					"null as REMARKS, null as PROCEDURE_TYPE limit 0;");
 		}
-		return getProcedures.executeQuery();
+		return psProcedures.executeQuery();
 	}
 
 	@Override
-	public int getResultSetHoldability() throws SQLException {
+	public int getResultSetHoldability() {
 		return ResultSet.CLOSE_CURSORS_AT_COMMIT;
 	}
 
 	@Override
-	public String getSQLKeywords() throws SQLException {
+	public String getSQLKeywords() {
 		return "";
 	}
 
 	@Override
-	public int getSQLStateType() throws SQLException {
+	public int getSQLStateType() {
 		return sqlStateSQL99;
 	}
 
 	@Override
-	public String getSchemaTerm() throws SQLException {
+	public String getSchemaTerm() {
 		return "schema";
 	}
 
 	@Override
-	public ResultSet getSchemas() throws SQLException {
+	public ResultSet getSchemas() {
 		throw new UnsupportedOperationException("getSchemas not supported by SQLite");
 	}
 
 	@Override
-	public String getSearchStringEscape() throws SQLException {
+	public String getSearchStringEscape() {
 		return null;
 	}
 
 	@Override
-	public String getStringFunctions() throws SQLException {
+	public String getStringFunctions() {
 		return "";
 	}
 
 	@Override
 	public ResultSet getSuperTables(String catalog, String schemaPattern,
 									String tableNamePattern) throws SQLException {
-		if (getSuperTypes == null) {
-			getSuperTypes = con.prepareStatement("select null as TYPE_CAT, null as TYPE_SCHEM, " +
+		if (psSuperTypes == null) {
+			psSuperTypes = con.prepareStatement("select null as TYPE_CAT, null as TYPE_SCHEM, " +
 					"null as TYPE_NAME, null as SUPERTYPE_CAT, null as SUPERTYPE_SCHEM, " +
 					"null as SUPERTYPE_NAME limit 0;");
 		}
-		return getSuperTypes.executeQuery();
+		return psSuperTypes.executeQuery();
 	}
 
 	@Override
 	public ResultSet getSuperTypes(String catalog, String schemaPattern,
 								   String typeNamePattern) throws SQLException {
-		if (getSuperTypes == null) {
-			getSuperTypes = con.prepareStatement("select null as TYPE_CAT, null as TYPE_SCHEM, " +
+		if (psSuperTypes == null) {
+			psSuperTypes = con.prepareStatement("select null as TYPE_CAT, null as TYPE_SCHEM, " +
 					"null as TYPE_NAME, null as SUPERTYPE_CAT, null as SUPERTYPE_SCHEM, " +
 					"null as SUPERTYPE_NAME limit 0;");
 		}
-		return getSuperTypes.executeQuery();
+		return psSuperTypes.executeQuery();
 	}
 
 	@Override
-	public String getSystemFunctions() throws SQLException {
+	public String getSystemFunctions() {
 		return "";
 	}
 
 	@Override
 	public ResultSet getTablePrivileges(String catalog, String schemaPattern,
 										String tableNamePattern) throws SQLException {
-		if (getTablePrivileges == null) {
-			getTablePrivileges = con.prepareStatement("select  null as TABLE_CAT, "
+		if (psTablePrivileges == null) {
+			psTablePrivileges = con.prepareStatement("select  null as TABLE_CAT, "
 					+ "null as TABLE_SCHEM, null as TABLE_NAME, null as GRANTOR, null "
 					+ "GRANTEE,  null as PRIVILEGE, null as IS_GRANTABLE limit 0;");
 		}
-		return getTablePrivileges.executeQuery();
+		return psTablePrivileges.executeQuery();
 	}
 
 	@Override
 	public ResultSet getTableTypes() throws SQLException {
 		checkOpen();
-		if (getTableTypes == null) {
-			getTableTypes = con.prepareStatement("select 'TABLE' as TABLE_TYPE "
+		if (psTableTypes == null) {
+			psTableTypes = con.prepareStatement("select 'TABLE' as TABLE_TYPE "
 					+ "union select 'VIEW' as TABLE_TYPE;");
 		}
-		getTableTypes.clearParameters();
-		return getTableTypes.executeQuery();
+		psTableTypes.clearParameters();
+		return psTableTypes.executeQuery();
 	}
 
 	@Override
+	@SuppressWarnings("PMD.CloseResource")
 	public ResultSet getTables(String catalog, String schemaPattern,
-							   String tableNamePattern, String[] types) throws SQLException {
-
-		if (tableNamePattern == null) {
-			tableNamePattern = "%";
-		}
-
-		if (types == null) {
+							   String _tableNamePattern, String[] _types) throws SQLException {
+		String tableNamePattern = Objects.requireNonNullElse(_tableNamePattern, "%");
+		String[] types;
+		if (_types == null) {
 			types = new String[]{TABLE_TYPE};
 		}
+		else
+			types=_types;
 		//		.tables command from here:
 		//			http://www.sqlite.org/sqlite.html
 		//
@@ -909,7 +931,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				" FROM sqlite_temp_master WHERE tbl_name LIKE ? AND name NOT LIKE 'android_metadata' AND upper(type) = ? ORDER BY 3";
 
 		ASQLConnectorDatabase db = con.getDb();
-		List<Cursor> cursorList = new ArrayList<Cursor>();
+		List<Cursor> cursorList = new ArrayList<>();
 		for (String tableType : types) {
 			String selectString = selectStringStart +
 					tableType +
@@ -917,8 +939,8 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 					tableType +
 					selectStringEnd;
 			Cursor c = db.rawQuery(selectString, new String[]{
-					tableNamePattern, tableType.toUpperCase(),
-					tableNamePattern, tableType.toUpperCase()});
+					tableNamePattern, tableType.toUpperCase(FlexiLogXML.getLocale()),
+					tableNamePattern, tableType.toUpperCase(FlexiLogXML.getLocale())});
 			cursorList.add(c);
 		}
 		ASQLConnectorResultSet resultSet;
@@ -936,12 +958,12 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public String getTimeDateFunctions() throws SQLException {
+	public String getTimeDateFunctions() {
 		return "";
 	}
-
+	@Override
 	public ResultSet getTypeInfo() throws SQLException {
-		String sql = "select "
+		String sql = SELECT
 				+ "tn as TYPE_NAME, "
 				+ "dt as DATA_TYPE, "
 				+ "0 as PRECISION, "
@@ -960,20 +982,12 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				+ "0 as SQL_DATA_TYPE, "
 				+ "0 as SQL_DATETIME_SUB, "
 				+ "10 as NUM_PREC_RADIX from ("
-				+ "    select 'BLOB' as tn, " + Types.BLOB + " as dt union"
-				+ "    select 'NULL' as tn, " + Types.NULL + " as dt union"
-				+ "    select 'REAL' as tn, " + Types.REAL + " as dt union"
-				+ "    select 'TEXT' as tn, " + Types.VARCHAR + " as dt union"
+				+ "    select 'BLOB' as tn, " + Types.BLOB + AS_DT_UNION
+				+ "    select 'NULL' as tn, " + Types.NULL + AS_DT_UNION
+				+ "    select 'REAL' as tn, " + Types.REAL + AS_DT_UNION
+				+ "    select 'TEXT' as tn, " + Types.VARCHAR + AS_DT_UNION
 				+ "    select 'INTEGER' as tn, " + Types.INTEGER + " as dt"
 				+ ") order by TYPE_NAME";
-
-		//      if (getTypeInfo == null) {
-//      getTypeInfo = con.prepareStatement(sql);
-//
-//        }
-//
-//        getTypeInfo.clearParameters();
-//        return getTypeInfo.executeQuery();
 
 		return new ASQLConnectorResultSet(con.getDb().rawQuery(sql, new String[0]));
 	}
@@ -981,44 +995,44 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	@Override
 	public ResultSet getUDTs(String catalog, String schemaPattern,
 							 String typeNamePattern, int[] types) throws SQLException {
-		if (getUDTs == null) {
-			getUDTs = con.prepareStatement("select  null as TYPE_CAT, null as TYPE_SCHEM, "
+		if (psUDTs == null) {
+			psUDTs = con.prepareStatement("select  null as TYPE_CAT, null as TYPE_SCHEM, "
 					+ "null as TYPE_NAME,  null as CLASS_NAME,  null as DATA_TYPE, null as REMARKS, "
 					+ "null as BASE_TYPE " + "limit 0;");
 		}
 
-		getUDTs.clearParameters();
-		return getUDTs.executeQuery();
+		psUDTs.clearParameters();
+		return psUDTs.executeQuery();
 	}
 
 	@Override
-	public String getURL() throws SQLException {
-		return con.url();
+	public String getURL() {
+		return con.getURL();
 	}
 
 	@Override
-	public String getUserName() throws SQLException {
+	public String getUserName() {
 		return null;
 	}
 
 	@Override
 	public ResultSet getVersionColumns(String catalog, String schema,
 									   String table) throws SQLException {
-		if (getVersionColumns == null) {
-			getVersionColumns = con.prepareStatement("select null as SCOPE, null as COLUMN_NAME, "
+		if (psVersionColumns == null) {
+			psVersionColumns = con.prepareStatement("select null as SCOPE, null as COLUMN_NAME, "
 					+ "null as DATA_TYPE, null as TYPE_NAME, null as COLUMN_SIZE, "
 					+ "null as BUFFER_LENGTH, null as DECIMAL_DIGITS, null as PSEUDO_COLUMN limit 0;");
 		}
-		return getVersionColumns.executeQuery();
+		return psVersionColumns.executeQuery();
 	}
 
 	@Override
-	public boolean insertsAreDetected(int type) throws SQLException {
+	public boolean insertsAreDetected(int type) {
 		return false;
 	}
 
 	@Override
-	public boolean isCatalogAtStart() throws SQLException {
+	public boolean isCatalogAtStart() {
 		return true;
 	}
 
@@ -1028,12 +1042,12 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public boolean locatorsUpdateCopy() throws SQLException {
+	public boolean locatorsUpdateCopy() {
 		return false;
 	}
 
 	@Override
-	public boolean nullPlusNonNullIsNull() throws SQLException {
+	public boolean nullPlusNonNullIsNull() {
 		return true;
 	}
 
@@ -1188,7 +1202,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public boolean supportsCoreSQLGrammar() throws SQLException {
+	public boolean supportsCoreSQLGrammar() {
 		return true;
 	}
 
@@ -1463,7 +1477,7 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return iface != null && iface.isAssignableFrom(getClass());
 	}
 
@@ -1477,53 +1491,52 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 	}
 
 	@Override
-	public boolean autoCommitFailureClosesAllResultSets() throws SQLException {
+	public boolean autoCommitFailureClosesAllResultSets() {
 		// TODO Evaluate if this is a sufficient implementation (if so, remove this comment)
 		return false;
 	}
 
 	@Override
-	public ResultSet getClientInfoProperties() throws SQLException {
+	public ResultSet getClientInfoProperties() {
 		// TODO Evaluate if this is a sufficient implementation (if so, remove this comment)
 		return null;
 	}
 
 	@Override
 	public ResultSet getFunctionColumns(String catalog, String schemaPattern,
-										String functionNamePattern, String columnNamePattern)
-			throws SQLException {
+										String functionNamePattern, String columnNamePattern) {
 		throw new UnsupportedOperationException("getFunctionColumns not supported");
 	}
 
 	@Override
 	public ResultSet getFunctions(String catalog, String schemaPattern,
-								  String functionNamePattern) throws SQLException {
+								  String functionNamePattern) {
 		throw new UnsupportedOperationException("getFunctions not implemented yet");
 	}
 
 	@Override
-	public RowIdLifetime getRowIdLifetime() throws SQLException {
+	public RowIdLifetime getRowIdLifetime() {
 		return RowIdLifetime.ROWID_UNSUPPORTED;
 	}
 
 	@Override
-	public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
+	public ResultSet getSchemas(String catalog, String schemaPattern) {
 		throw new UnsupportedOperationException("getSchemas not implemented yet");
 	}
 
 	// methods added for JDK7 compilation
 
 	@Override
-	public boolean supportsStoredFunctionsUsingCallSyntax() throws SQLException {
+	public boolean supportsStoredFunctionsUsingCallSyntax() {
 		// TODO Evaluate if this is a sufficient implementation (if so, remove this comment)
 		return false;
 	}
-
-	public boolean generatedKeyAlwaysReturned() throws SQLException {
+	@SuppressWarnings("PMD.MissingOverride")
+	public boolean generatedKeyAlwaysReturned() {
 		throw new UnsupportedOperationException("generatedKeyAlwaysReturned not implemented yet");
 	}
-
-	public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
+	@SuppressWarnings("PMD.MissingOverride")
+	public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) {
 		throw new UnsupportedOperationException("getPseudoColumns not implemented yet");
 	}
 
@@ -1574,14 +1587,23 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 		/**
 		 * The column(s) for the primary key.
 		 */
-		String[] pkColumns = null;
-
+		List<String> pkColumns = null;
+		private void initPkColumns(String ...columns)
+		{
+			List<String> pkColumns=new ArrayList<>(columns.length);
+			for (String c : columns)
+			{
+				pkColumns.add(c.toLowerCase(FlexiLogXML.getLocale()).trim());
+			}
+			this.pkColumns=Collections.unmodifiableList(pkColumns);
+		}
 		/**
 		 * Constructor.
 		 *
 		 * @param table The table for which to get find a primary key.
 		 * @throws SQLException if a problem occurs
 		 */
+		@SuppressWarnings("PMD.UseTryWithResources")
 		public PrimaryKeyFinder(String table) throws SQLException {
 			this.table = table;
 
@@ -1589,49 +1611,37 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				throw new SQLException("Invalid table name: '" + this.table + "'");
 			}
 
-			Statement stat = null;
-			ResultSet rs = null;
+			try(Statement stat = con.createStatement()) {
 
-			try {
-				stat = con.createStatement();
 				// read create SQL script for table
-				rs = stat.executeQuery("select sql from sqlite_master where" +
-						" lower(name) = lower('" + escape(table) + "') and type = 'table'");
+				try(ResultSet rs = stat.executeQuery("select sql from sqlite_master where" +
+						" lower(name) = lower('" + escape(table) + "') and type = 'table'")) {
 
-				if (!rs.next())
-					throw new SQLException("Table not found: '" + table + "'");
+					if (!rs.next())
+						throw new SQLException("Table not found: '" + table + "'");
 
-				Matcher matcher = PK_NAMED_PATTERN.matcher(rs.getString(1));
-				if (matcher.find()) {
-					pkName = '\'' + escape(matcher.group(1).toLowerCase()) + '\'';
-					pkColumns = matcher.group(2).split(",");
-				} else {
-					matcher = PK_UNNAMED_PATTERN.matcher(rs.getString(1));
+					Matcher matcher = PK_NAMED_PATTERN.matcher(rs.getString(1));
 					if (matcher.find()) {
-						pkColumns = matcher.group(1).split(",");
+						pkName = '\'' + escape(Objects.requireNonNull(matcher.group(1)).toLowerCase(FlexiLogXML.getLocale())) + '\'';
+						initPkColumns(Objects.requireNonNull(matcher.group(2)).split(","));
+					} else {
+						matcher = PK_UNNAMED_PATTERN.matcher(rs.getString(1));
+						if (matcher.find()) {
+							initPkColumns(Objects.requireNonNull(matcher.group(1)).split(","));
+						}
 					}
 				}
 
-				if (pkColumns == null) {
-					rs = stat.executeQuery("pragma table_info('" + escape(table) + "');");
-					while (rs.next()) {
-						if (rs.getBoolean(6))
-							pkColumns = new String[]{rs.getString(2)};
-					}
-				}
 
-				if (pkColumns != null)
-					for (int i = 0; i < pkColumns.length; i++) {
-						pkColumns[i] = pkColumns[i].toLowerCase().trim();
+			}
+			if (pkColumns == null) {
+				try (Statement stat = con.createStatement()) {
+					try (ResultSet rs = stat.executeQuery("pragma table_info('" + escape(table) + PARENTHESIS_END_SQL_QUERY)) {
+						while (rs.next()) {
+							if (rs.getBoolean(6))
+								initPkColumns(rs.getString(2));
+						}
 					}
-			} finally {
-				try {
-					if (rs != null) rs.close();
-				} catch (Exception ignored) {
-				}
-				try {
-					if (stat != null) stat.close();
-				} catch (Exception ignored) {
 				}
 			}
 		}
@@ -1644,9 +1654,9 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 		}
 
 		/**
-		 * @return Array of primary key column(s) if any.
+		 * @return List of primary key column(s) if any.
 		 */
-		public String[] getColumns() {
+		public List<String> getColumns() {
 			return pkColumns;
 		}
 	}

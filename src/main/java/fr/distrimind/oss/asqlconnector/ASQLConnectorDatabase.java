@@ -2,6 +2,7 @@ package fr.distrimind.oss.asqlconnector;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
+import fr.distrimind.oss.flexilogxml.common.ReflectionTools;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;
@@ -29,6 +30,7 @@ import java.sql.SQLException;
  */
 public class ASQLConnectorDatabase {
 
+	public static final String TIMEOUT_EXPIRED = "Timeout Expired";
 	/**
 	 * The actual android database.
 	 */
@@ -72,7 +74,7 @@ public class ASQLConnectorDatabase {
 				if (isLockedException(e)) {
 					try {
 						Thread.sleep(retryInterval);
-					} catch (InterruptedException e1) {
+					} catch (InterruptedException ignored) {
 						// ignore
 					}
 					if (System.currentTimeMillis() - timeNow >= timeout) {
@@ -91,10 +93,10 @@ public class ASQLConnectorDatabase {
 	 */
 	protected boolean isLockedException(SQLiteException maybeLocked) {
 		try {
-			if (Class.forName("android.database.sqlite.SQLiteDatabaseLockedException", false, getClass().getClassLoader()).isAssignableFrom(maybeLocked.getClass())) {
+			if (ReflectionTools.getClassLoader().loadClass("android.database.sqlite.SQLiteDatabaseLockedException").isAssignableFrom(maybeLocked.getClass())) {
 				return true;
 			}
-		} catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException ignored) {
 			// no android.database.sqlite.SQLiteDatabaseLockedException
 		}
 		return false;
@@ -106,13 +108,13 @@ public class ASQLConnectorDatabase {
 	 * @throws SQLException
 	 */
 	public Cursor rawQuery(String sql, String[] makeArgListQueryString) throws SQLException {
-		Log.trace(() -> "SQLiteDatabase rawQuery: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
+		Log.trace(() -> "SQLiteDatabase rawQuery: " + Thread.currentThread().getId() + ASQLConnectorConnection.BACK_SLASH + Thread.currentThread().getName() + ASQLConnectorConnection.BACK_SLASH2 + sql);
 		long queryStart = System.currentTimeMillis();
 		long delta ;
 		do {
 			try {
 				Cursor cursor = sqliteDatabase.rawQuery(sql, makeArgListQueryString);
-				Log.trace(() -> "SQLiteDatabase rawQuery OK: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
+				Log.trace(() -> "SQLiteDatabase rawQuery OK: " + Thread.currentThread().getId() + ASQLConnectorConnection.BACK_SLASH + Thread.currentThread().getName() + ASQLConnectorConnection.BACK_SLASH2 + sql);
 				return cursor;
 			} catch (SQLiteException e) {
 				if (isLockedException(e)) {
@@ -122,7 +124,7 @@ public class ASQLConnectorDatabase {
 				}
 			}
 		} while (delta < timeout);
-		throw new SQLException("Timeout Expired");
+		throw new SQLException(TIMEOUT_EXPIRED);
 	}
 
 	/**
@@ -131,7 +133,7 @@ public class ASQLConnectorDatabase {
 	 * @throws SQLException
 	 */
 	public void execSQL(String sql, Object[] makeArgListQueryObject) throws SQLException {
-		Log.trace(() -> "SQLiteDatabase execSQL: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
+		Log.trace(() -> "SQLiteDatabase execSQL: " + Thread.currentThread().getId() + ASQLConnectorConnection.BACK_SLASH + Thread.currentThread().getName() + ASQLConnectorConnection.BACK_SLASH2 + sql);
 		long timeNow = System.currentTimeMillis();
 		long delta;
 		if (makeArgListQueryObject == null)
@@ -151,7 +153,7 @@ public class ASQLConnectorDatabase {
 					if (o instanceof ASQLConnectorBlob)
 						((ASQLConnectorBlob) o).free();
 				}
-				Log.trace(() -> "SQLiteDatabase execSQL OK: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
+				Log.trace(() -> "SQLiteDatabase execSQL OK: " + Thread.currentThread().getId() + ASQLConnectorConnection.BACK_SLASH + Thread.currentThread().getName() + ASQLConnectorConnection.BACK_SLASH2 + sql);
 				return;
 			} catch (SQLiteException e) {
 				if (isLockedException(e)) {
@@ -161,7 +163,7 @@ public class ASQLConnectorDatabase {
 				}
 			}
 		} while (delta < timeout);
-		throw new SQLException("Timeout Expired");
+		throw new SQLException(TIMEOUT_EXPIRED);
 	}
 
 	/**
@@ -170,13 +172,13 @@ public class ASQLConnectorDatabase {
 	 * @throws SQLException
 	 */
 	public void execSQL(String sql) throws SQLException {
-		Log.trace(() -> "SQLiteDatabase execSQL: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
+		Log.trace(() -> "SQLiteDatabase execSQL: " + Thread.currentThread().getId() + ASQLConnectorConnection.BACK_SLASH + Thread.currentThread().getName() + ASQLConnectorConnection.BACK_SLASH2 + sql);
 		long timeNow = System.currentTimeMillis();
-		long delta = 0;
+		long delta ;
 		do {
 			try {
 				sqliteDatabase.execSQL(sql);
-				Log.trace(() -> "SQLiteDatabase execSQL OK: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + sql);
+				Log.trace(() -> "SQLiteDatabase execSQL OK: " + Thread.currentThread().getId() + ASQLConnectorConnection.BACK_SLASH + Thread.currentThread().getName() + ASQLConnectorConnection.BACK_SLASH2 + sql);
 				return;
 			} catch (SQLiteException e) {
 				if (isLockedException(e)) {
@@ -186,7 +188,7 @@ public class ASQLConnectorDatabase {
 				}
 			}
 		} while (delta < timeout);
-		throw new SQLException("Timeout Expired");
+		throw new SQLException(TIMEOUT_EXPIRED);
 	}
 
 	/**
@@ -240,7 +242,7 @@ public class ASQLConnectorDatabase {
 				}
 			}
 		} while (delta < timeout);
-		throw new SQLException("Timeout Expired");
+		throw new SQLException(TIMEOUT_EXPIRED);
 	}
 
 	/**
@@ -284,6 +286,7 @@ public class ASQLConnectorDatabase {
 	 * On Android, it's a convoluted call to a package-private method (or, if that fails, the
 	 * response is '1'.
 	 */
+	@SuppressWarnings("PMD.AvoidAccessibilityAlteration")
 	public int changedRowCount() {
 		if (getChangedRowCount == null) {
 			try {  // JNA/J2SE compatibility method.
@@ -293,15 +296,15 @@ public class ASQLConnectorDatabase {
 					// Android
 					getChangedRowCount = sqliteDatabase.getClass().getDeclaredMethod("lastChangeCount", (Class<?>[]) null);
 					getChangedRowCount.setAccessible(true);
-				} catch (Exception e) {
+				} catch (Exception ignored) {
 					// ignore
 				}
 			}
 		}
 		if (getChangedRowCount != null) {
 			try {
-				return ((Integer) getChangedRowCount.invoke(sqliteDatabase, (Object[]) null)).intValue();
-			} catch (Exception e) {
+				return ((Integer) getChangedRowCount.invoke(sqliteDatabase, (Object[]) null));
+			} catch (Exception ignored) {
 				// ignore
 			}
 		}
@@ -309,7 +312,7 @@ public class ASQLConnectorDatabase {
 	}
 
 
-	protected static enum Transaction {
+	public enum Transaction {
 		setTransactionSuccessful, endTransaction, close, beginTransaction
 	}
 

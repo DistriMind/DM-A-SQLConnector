@@ -22,8 +22,9 @@ class Utils {
 		}
 	}
 
+	@SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
 	static byte[] getUntypedBytesArray(String s) throws SQLException {
-		if (s == null || s.length()<2)
+		if (s == null)
 			return null;
 		else {
 			if (s.charAt(0)!=ASLConnectorStringType.BYTE_ARRAY_TYPE)
@@ -39,8 +40,8 @@ class Utils {
 		}
 	}
 
-	static String getUntypedString(String s) throws SQLException {
-		if (s == null || s.length()<2)
+	static String getUntypedString(String s) {
+		if (s == null)
 			return null;
 		else {
 			if (s.charAt(0)!=ASLConnectorStringType.STRING_TYPE)

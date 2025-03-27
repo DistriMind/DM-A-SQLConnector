@@ -1,6 +1,6 @@
 package fr.distrimind.oss.asqlconnector;
 
-import android.database.Cursor;
+import fr.distrimind.oss.flexilogxml.common.FlexiLogXML;
 
 import java.sql.*;
 
@@ -21,7 +21,8 @@ public class ASQLConnectorStatement implements Statement {
 	 * is -1 then we just return it from getUpdateCount.
 	 */
 	public int updateCount = -1;
-	protected StringBuffer sqlBatch = new StringBuffer();
+	@SuppressWarnings("PMD.AvoidStringBufferField")
+	protected StringBuilder sqlBatch = new StringBuilder();
 	private ASQLConnectorDatabase db;
 	private ASQLConnectorConnection aSQLConnectorConnection;
 	private ASQLConnectorResultSet rs = null;
@@ -34,7 +35,7 @@ public class ASQLConnectorStatement implements Statement {
 	}
 
 	@Override
-	public void addBatch(String sql) throws SQLException {
+	public void addBatch(String sql) {
 		//sql must be a static sql
 		this.sqlBatch.append(sql);
 	}
@@ -45,21 +46,28 @@ public class ASQLConnectorStatement implements Statement {
 	}
 
 	@Override
-	public void clearBatch() throws SQLException {
-		sqlBatch = new StringBuffer();
+	public void clearBatch() {
+		sqlBatch = new StringBuilder();
 	}
 
 	@Override
-	public void clearWarnings() throws SQLException {
+	public void clearWarnings() {
 		// TODO Evaluate if the implementation is sufficient (if so, delete comment and log)
 		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line " + DebugPrinter.getLineNumber());
 	}
 
 	@Override
 	public void close() throws SQLException {
+		clearBatch();
+		clearWarnings();
 		closeResultSet();
 		aSQLConnectorConnection = null;
 		db = null;
+	}
+
+	void freeResultSetWithoutClosingIt()
+	{
+		db=null;
 	}
 
 	/**
@@ -82,15 +90,14 @@ public class ASQLConnectorStatement implements Statement {
 	public boolean execute(String sql) throws SQLException {
 		updateCount = -1;  // default outcome.  If the sql is a query or any other sql fails.
 		closeResultSet();
-		boolean isSelect = sql.toUpperCase().matches("(?m)(?s)\\s*(SELECT|PRAGMA|EXPLAIN QUERY PLAN).*");
+		boolean isSelect = sql.toUpperCase(FlexiLogXML.getLocale()).matches("(?m)(?s)\\s*(SELECT|PRAGMA|EXPLAIN QUERY PLAN).*");
 		if (rs != null && !rs.isClosed()) {
 			rs.close();
 		}
 		if (isSelect) {
 			String limitedSql = sql + (maxRows != null ? " LIMIT " + maxRows : "");
-			Cursor c = db.rawQuery(limitedSql, new String[0]);
-			rs = new ASQLConnectorResultSet(c);
-			if (c.getCount() == 0)
+			rs = new ASQLConnectorResultSet(db.rawQuery(limitedSql, new String[0]));
+			if (rs.getCursor().getCount() == 0)
 				return false;
 		} else {
 			db.execSQL(sql);
@@ -119,7 +126,6 @@ public class ASQLConnectorStatement implements Statement {
 
 	@Override
 	public int[] executeBatch() throws SQLException {
-		updateCount = -1;
 		int[] results = new int[1];
 		results[0] = EXECUTE_FAILED;
 		db.execSQL(sqlBatch.toString());
@@ -131,9 +137,7 @@ public class ASQLConnectorStatement implements Statement {
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException {
 		closeResultSet();
-		Cursor c = db.rawQuery(sql, null);
-		rs = new ASQLConnectorResultSet(c);
-		return rs;
+		return rs = new ASQLConnectorResultSet(db.rawQuery(sql, null));
 	}
 
 	@Override
@@ -160,7 +164,7 @@ public class ASQLConnectorStatement implements Statement {
 	}
 
 	@Override
-	public Connection getConnection() throws SQLException {
+	public Connection getConnection() {
 		return aSQLConnectorConnection;
 	}
 
@@ -194,17 +198,17 @@ public class ASQLConnectorStatement implements Statement {
 	}
 
 	@Override
-	public int getMaxFieldSize() throws SQLException {
+	public int getMaxFieldSize() {
 		return 0;
 	}
 
 	@Override
-	public void setMaxFieldSize(int max) throws SQLException {
+	public void setMaxFieldSize(int max) {
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
 
 	@Override
-	public int getMaxRows() throws SQLException {
+	public int getMaxRows() {
 		// TODO: return rs.getMaxRows()
 		// TODO: Avoid NPE for rs
 		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
@@ -239,37 +243,37 @@ public class ASQLConnectorStatement implements Statement {
 	}
 
 	@Override
-	public int getQueryTimeout() throws SQLException {
+	public int getQueryTimeout() {
 		throw new UnsupportedOperationException("getQueryTimeout not implemented yet");
 	}
 
 	@Override
-	public void setQueryTimeout(int seconds) throws SQLException {
+	public void setQueryTimeout(int seconds) {
 		throw new UnsupportedOperationException("setQueryTimeout not implemented yet");
 	}
 
 	@Override
-	public ResultSet getResultSet() throws SQLException {
+	public ResultSet getResultSet() {
 		return rs;
 	}
 
 	@Override
-	public int getResultSetConcurrency() throws SQLException {
+	public int getResultSetConcurrency() {
 		return ResultSet.CONCUR_READ_ONLY;
 	}
 
 	@Override
-	public int getResultSetHoldability() throws SQLException {
+	public int getResultSetHoldability() {
 		return ResultSet.CLOSE_CURSORS_AT_COMMIT;
 	}
 
 	@Override
-	public int getResultSetType() throws SQLException {
+	public int getResultSetType() {
 		return ResultSet.TYPE_FORWARD_ONLY;
 	}
 
 	@Override
-	public int getUpdateCount() throws SQLException {
+	public int getUpdateCount() {
 		if (updateCount != -1) {  // for any successful update/insert, update count will have been set
 			// the documenation states that you're only supposed to call this once per result.
 			// on subsequent calls, we'll return -1 (which would appear to be the correct return
@@ -281,7 +285,7 @@ public class ASQLConnectorStatement implements Statement {
 	}
 
 	@Override
-	public SQLWarning getWarnings() throws SQLException {
+	public SQLWarning getWarnings() {
 		// TODO Evaluate if the implementation is sufficient (if so, delete comment and log)
 		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line "
 				+ DebugPrinter.getLineNumber());
@@ -289,18 +293,18 @@ public class ASQLConnectorStatement implements Statement {
 	}
 
 	@Override
-	public void setCursorName(String name) throws SQLException {
+	public void setCursorName(String name) {
 	}
 
 	@Override
-	public void setEscapeProcessing(boolean enable) throws SQLException {
+	public void setEscapeProcessing(boolean enable) {
 		if (enable) {
 			throw new UnsupportedOperationException("setEscapeProcessing not implemented yet");
 		}
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return iface != null && iface.isAssignableFrom(getClass());
 	}
 
@@ -314,27 +318,28 @@ public class ASQLConnectorStatement implements Statement {
 	}
 
 	@Override
-	public boolean isClosed() throws SQLException {
+	public boolean isClosed() {
 		return aSQLConnectorConnection == null;
 	}
 
 	@Override
-	public boolean isPoolable() throws SQLException {
+	public boolean isPoolable() {
 		return poolable;
 	}
 
 	@Override
-	public void setPoolable(boolean poolable) throws SQLException {
+	public void setPoolable(boolean poolable) {
 		this.poolable = poolable;
 	}
 
 	// methods added for JDK7 compilation
 
-	public boolean isCloseOnCompletion() throws SQLException {
+	@SuppressWarnings("PMD.MissingOverride")
+	public boolean isCloseOnCompletion() {
 		return false;
 	}
-
-	public void closeOnCompletion() throws SQLException {
+	@SuppressWarnings("PMD.MissingOverride")
+	public void closeOnCompletion() {
 		throw new UnsupportedOperationException("closeOnCompletion not implemented yet");
 	}
 }

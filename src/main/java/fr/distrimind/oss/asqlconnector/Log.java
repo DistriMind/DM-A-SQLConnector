@@ -35,7 +35,10 @@ public class Log {
 	{
 		logger.debug(marker, message);
 	}
-
+	public static void error(String message)
+	{
+		error(() -> message);
+	}
 	public static void error(Supplier<String> message)
 	{
 		logger.error(marker, message);
@@ -44,5 +47,9 @@ public class Log {
 	public static void error(Supplier<String> message, Throwable t)
 	{
 		logger.error(marker, message, t);
+	}
+	public static void error(Throwable t)
+	{
+		logger.error(marker, t);
 	}
 }

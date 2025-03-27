@@ -14,7 +14,7 @@ public class ASQLConnectorEmptyResultSetMetaData implements ResultSetMetaData {
 	}
 
 	@Override
-	public int getColumnCount() throws SQLException {
+	public int getColumnCount() {
 		return 0;
 	}
 
@@ -124,7 +124,7 @@ public class ASQLConnectorEmptyResultSetMetaData implements ResultSetMetaData {
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return false;
 	}
 }

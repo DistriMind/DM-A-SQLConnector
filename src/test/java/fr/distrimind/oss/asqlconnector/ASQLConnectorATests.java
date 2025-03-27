@@ -1,6 +1,7 @@
 package fr.distrimind.oss.asqlconnector;
 
 
+import fr.distrimind.oss.flexilogxml.common.ReflectionTools;
 import junit.framework.AssertionFailedError;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
 public class ASQLConnectorATests {
 
 	@Parameterized.Parameters(name = "{index}: {0}")
+	@SuppressWarnings("PMD.CheckResultSet")
 	public static Collection<Object[]> getTests()
 	{
 		List<Object[]> tests=new ArrayList<>();
@@ -66,7 +68,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
 				stmt.setInt(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Assert.assertEquals(string, rs.getString(1));
 					Assert.assertEquals(string, rs.getString("aString"));
 					Assert.assertEquals(string, rs.getObject(1));
@@ -142,7 +144,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
 				stmt.setInt(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 
 					Assert.assertEquals(bigDecimal, rs.getBigDecimal(1));
 					Assert.assertEquals(bigDecimal, rs.getBigDecimal("aBigDecimal"));
@@ -177,7 +179,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
 				stmt.setInt(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Assert.assertNull(rs.getString(1));
 
 					Assert.assertNull(rs.getObject(2));
@@ -236,7 +238,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
 				stmt.setInt(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 
 					Assert.assertEquals(value, rs.getInt(1));
 				}
@@ -253,7 +255,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
 				stmt.setInt(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 
 					Assert.assertEquals(updateValue, rs.getInt(1));
 				}
@@ -280,7 +282,7 @@ public class ASQLConnectorATests {
 				try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
 					stmt.setInt(1, id+i);
 					try (ResultSet rs = stmt.executeQuery()) {
-						rs.next();
+						Assert.assertTrue(rs.next());
 
 						Assert.assertEquals(value+i, rs.getInt(1));
 					}
@@ -295,7 +297,7 @@ public class ASQLConnectorATests {
 				try (PreparedStatement stmt = conn.prepareStatement(selectStmt)) {
 					stmt.setInt(1, id+1);
 					try (ResultSet rs = stmt.executeQuery()) {
-						rs.next();
+						Assert.assertTrue(rs.next());
 
 						Assert.assertEquals(updateValue, rs.getInt(1));
 					}
@@ -352,7 +354,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement("SELECT value,key FROM blobtest where key = ?")) {
 				stmt.setInt(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					blob = rs.getBlob(1);
 					Assert.assertArrayEquals(byteArray, blob.getBytes(1, byteArray.length));
 					Assert.assertEquals(byteArray.length, blob.length());
@@ -380,7 +382,7 @@ public class ASQLConnectorATests {
 				stmt.setTimestamp(1, timestamp);
 				stmt.executeUpdate();
 				try (ResultSet rs = conn.createStatement().executeQuery("select last_insert_rowid();")) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					id = rs.getLong(1);
 				}
 			}
@@ -388,7 +390,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement("select created_at from timestamptest where id = ?")) {
 				stmt.setLong(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Assert.assertEquals(timestamp, rs.getTimestamp(1));
 				}
 			}
@@ -405,7 +407,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement("select created_at from timestamptest where id = ?")) {
 				stmt.setLong(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Assert.assertEquals(timestamp, rs.getTimestamp(1));
 				}
 			}
@@ -424,7 +426,7 @@ public class ASQLConnectorATests {
 
 			try (PreparedStatement stmt = conn.prepareStatement("SELECT value FROM stringblobtest")) {
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Clob clob = rs.getClob(1);
 					Assert.assertEquals(s, clob.getSubString(1, s.length()));
 				}
@@ -441,7 +443,7 @@ public class ASQLConnectorATests {
 				stmt.setString(1, randomString);
 				stmt.executeUpdate();
 				try (ResultSet rs = stmt.getGeneratedKeys()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					id = rs.getLong(1);
 				}
 			}
@@ -449,7 +451,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement("select value from simpletest where id = ?")) {
 				stmt.setLong(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Assert.assertEquals(randomString, rs.getString(1));
 				}
 			}
@@ -466,7 +468,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement("select value from simpletest where id = ?")) {
 				stmt.setLong(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Assert.assertEquals(randomString, rs.getString(1));
 				}
 			}
@@ -485,7 +487,7 @@ public class ASQLConnectorATests {
 				stmt.setDate(1, date);
 				stmt.executeUpdate();
 				try (ResultSet rs = conn.createStatement().executeQuery("select last_insert_rowid();")) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					id = rs.getLong(1);
 				}
 			}
@@ -493,7 +495,7 @@ public class ASQLConnectorATests {
 			try (PreparedStatement stmt = conn.prepareStatement("select created_at from datetest where id = ?")) {
 				stmt.setLong(1, id);
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Assert.assertEquals(date, rs.getDate(1));
 					Assert.assertEquals(date, new Date(rs.getTimestamp(1).getTime()));
 					Assert.assertEquals(date, rs.getDate("created_at"));
@@ -508,7 +510,7 @@ public class ASQLConnectorATests {
 
 			try (PreparedStatement stmt = conn.prepareStatement("SELECT datetimecol FROM datetime_now_test")) {
 				try (ResultSet rs = stmt.executeQuery()) {
-					rs.next();
+					Assert.assertTrue(rs.next());
 					Assert.assertTrue(Pattern.compile("20\\d\\d-\\d\\d-\\d\\d.*").matcher(rs.getTimestamp("datetimecol").toString()).matches());
 				}
 			}
@@ -521,14 +523,9 @@ public class ASQLConnectorATests {
 	static final File DB_DIR = new File("/data/data/fr.distrimind.oss.asqlconnector/databases/");
 	static final Random random = new Random(System.currentTimeMillis());
 
-	/*static {
-		registerDriver();
-	}*/
-
 	private static void registerDriver() {
 		try {
-			DriverManager.registerDriver((Driver) (Class
-					.forName("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver", true, ASQLConnectorATests.class.getClassLoader()).getConstructor().newInstance()));
+			DriverManager.registerDriver((Driver) (ReflectionTools.getClassLoader().loadClass("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver").getConstructor().newInstance()));
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException |
 				 NoSuchMethodException | InvocationTargetException e) {
 			throw new AssertionFailedError(e.toString());
@@ -561,6 +558,7 @@ public class ASQLConnectorATests {
 		return executeForGeneratedKeyWithList(conn, query, Arrays.asList(parameters));
 	}
 
+	@SuppressWarnings("PMD.CheckResultSet")
 	private static long executeForGeneratedKeyWithList(Connection conn, String query, List<Object> parameters) throws SQLException {
 		try (PreparedStatement stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
 			for (int i = 0; i < parameters.size(); i++) {
@@ -568,7 +566,7 @@ public class ASQLConnectorATests {
 			}
 			stmt.executeUpdate();
 			try (ResultSet rs = stmt.getGeneratedKeys()) {
-				rs.next();
+				Assert.assertTrue(rs.next());
 				return rs.getLong(1);
 			}
 		}

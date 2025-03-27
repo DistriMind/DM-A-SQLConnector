@@ -207,6 +207,7 @@ public class ASQLConnectorBlob implements Blob {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.CompareObjectsWithEquals")
 	public int setBytes(long pos, byte[] theBytes, int offset, int len) throws SQLException {
 		if (b==null)
 			throw new SQLException();

@@ -21,7 +21,8 @@ import java.sql.*;
  * @see <a href="https://github.com/datanucleus/datanucleus-rdbms/blob/master/src/main/java/org/datanucleus/store/rdbms/mapping/datastore/ClobImpl.java">ClobImpl from DataNucleus Project</a>
  */
 public class ASQLConnectorClob implements Clob, NClob {
-	private final long length;
+	public static final String FREE_HAS_BEEN_CALLED = "free() has been called";
+	private final long len;
 	/**
 	 * Whether we have already freed resources.
 	 */
@@ -50,28 +51,28 @@ public class ASQLConnectorClob implements Clob, NClob {
 			throw new IllegalArgumentException("String cannot be null");
 		}
 		this.string = string;
-		this.length = string.length();
+		this.len = string.length();
 	}
-
+	@Override
 	public long length() throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException();
 		}
 
-		return length;
+		return len;
 	}
-
+	@Override
 	public void truncate(long len) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		throw new UnsupportedOperationException();
 	}
-
+	@Override
 	public InputStream getAsciiStream() throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		if (inputStream == null) {
@@ -79,18 +80,18 @@ public class ASQLConnectorClob implements Clob, NClob {
 		}
 		return inputStream;
 	}
-
+	@Override
 	public OutputStream setAsciiStream(long pos) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		throw new UnsupportedOperationException();
 	}
-
+	@Override
 	public Reader getCharacterStream() throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		if (reader == null) {
@@ -98,10 +99,10 @@ public class ASQLConnectorClob implements Clob, NClob {
 		}
 		return reader;
 	}
-
+	@Override
 	public Writer setCharacterStream(long pos) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		throw new UnsupportedOperationException();
@@ -111,9 +112,9 @@ public class ASQLConnectorClob implements Clob, NClob {
 	 * Free the Blob object and releases the resources that it holds.
 	 * The object is invalid once the free method is called.
 	 *
-	 * @throws SQLException if an error occurs
 	 */
-	public void free() throws SQLException {
+	@Override
+	public void free() {
 		if (freed) {
 			return;
 		}
@@ -125,7 +126,7 @@ public class ASQLConnectorClob implements Clob, NClob {
 		if (inputStream != null) {
 			try {
 				inputStream.close();
-			} catch (IOException ioe) {
+			} catch (IOException ignored) {
 				// Do nothing
 			}
 		}
@@ -140,9 +141,10 @@ public class ASQLConnectorClob implements Clob, NClob {
 	 *               The first byte in the Clob is at position 1
 	 * @param length the length in bytes of the partial value to be retrieved
 	 */
+	@Override
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		// TODO Use pos, length
@@ -151,10 +153,10 @@ public class ASQLConnectorClob implements Clob, NClob {
 		}
 		return reader;
 	}
-
+	@Override
 	public String getSubString(long pos, int length) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		if (pos > Integer.MAX_VALUE) {
@@ -164,34 +166,34 @@ public class ASQLConnectorClob implements Clob, NClob {
 		}
 		return string.substring((int) pos - 1, (int) pos + length - 1);
 	}
-
+	@Override
 	public int setString(long pos, String str) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		throw new UnsupportedOperationException();
 	}
-
+	@Override
 	public int setString(long pos, String str, int offset, int len) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		throw new UnsupportedOperationException();
 	}
-
+	@Override
 	public long position(String searchstr, long start) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		throw new UnsupportedOperationException();
 	}
-
+	@Override
 	public long position(Clob searchstr, long start) throws SQLException {
 		if (freed) {
-			throw new SQLException("free() has been called");
+			throw new SQLException(FREE_HAS_BEEN_CALLED);
 		}
 
 		throw new UnsupportedOperationException();

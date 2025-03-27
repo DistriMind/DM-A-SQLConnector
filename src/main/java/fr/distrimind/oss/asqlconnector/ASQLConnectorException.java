@@ -4,6 +4,7 @@ import android.database.SQLException;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.Objects;
 
 
 public class ASQLConnectorException extends java.sql.SQLException {
@@ -23,7 +24,15 @@ public class ASQLConnectorException extends java.sql.SQLException {
 
 	@Override
 	public boolean equals(Object o) {
-		return sqlException.equals(o);
+		if (o instanceof ASQLConnectorException)
+			return sqlException.equals(((ASQLConnectorException) o).sqlException);
+		else
+			return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(sqlException);
 	}
 
 	@Override
@@ -51,10 +60,9 @@ public class ASQLConnectorException extends java.sql.SQLException {
 		return sqlException.getStackTrace();
 	}
 
-	@SuppressWarnings("CallToPrintStackTrace")
 	@Override
 	public void printStackTrace() {
-		sqlException.printStackTrace();
+		Log.error(sqlException);
 	}
 
 	@Override

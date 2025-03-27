@@ -1,5 +1,6 @@
 package fr.distrimind.oss.asqlconnector;
 
+import fr.distrimind.oss.flexilogxml.common.ReflectionTools;
 import junit.framework.AssertionFailedError;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -48,8 +49,7 @@ public class ASQLConnectorBTests {
 	@Before
 	public void createConnection() throws SQLException {
 		try {
-			DriverManager.registerDriver((Driver) (Class
-					.forName("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver", true, ASQLConnectorBTests.class.getClassLoader()).getConstructor().newInstance()));
+			DriverManager.registerDriver((Driver) (ReflectionTools.getClassLoader().loadClass("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver").getConstructor().newInstance()));
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException |
 				 NoSuchMethodException | InvocationTargetException e) {
 			throw new AssertionFailedError(e.toString());

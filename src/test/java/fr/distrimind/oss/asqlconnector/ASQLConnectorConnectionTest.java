@@ -17,6 +17,7 @@ public class ASQLConnectorConnectionTest {
 	public static final int CREATE_IF_NECESSARY = 268435456;
 	public static final int OPEN_READWRITE = 0;
 	private static final File DB_DIR = new File("/data/data/fr.distrimind.oss.asqlconnector/databases/");
+	public static final String JDBC_ASQLCONNECTOR = "jdbc:asqlconnector:";
 
 	public static boolean checkFolderRecursive(File folderPath) throws IOException {
 		if (!(folderPath.exists())) {
@@ -43,25 +44,25 @@ public class ASQLConnectorConnectionTest {
 		}
 		Assert.assertTrue(dbFile.exists());
 
-		String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
-		Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, properties);
-		Assert.assertFalse(conn.isClosed());
-		conn.close();
+		String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath();
+		try(Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, properties)) {
+			Assert.assertFalse(conn.isClosed());
+		}
 	}
 
 	@Test
-	public void shouldSupportQueryPartOfURL() throws SQLException, IOException {
+	public void shouldSupportQueryPartOfGetURL() throws SQLException, IOException {
 		File dbFile = cleanDbFile("query-test.db");
-		String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath() + "?timeout=30";
-		Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
-		Assert.assertFalse(conn.isClosed());
-		conn.close();
+		String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath() + "?timeout=30";
+		try(Connection conn = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
+			Assert.assertFalse(conn.isClosed());
+		}
 	}
 
 	@Test
-	public void shouldDealWithInvalidDirectoryGivenAsFile() throws SQLException, IOException {
+	public void shouldDealWithInvalidDirectoryGivenAsFile() throws IOException {
 		File dbFile = cleanDbFile("db-as-dir.db");
-		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath();
 		try (Connection ignored = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
 			Assert.assertTrue(dbFile.exists());
 			Assert.assertTrue(dbFile.isFile());
@@ -76,12 +77,10 @@ public class ASQLConnectorConnectionTest {
 
 	@SuppressWarnings("EmptyTryBlock")
 	@Test
-	public void shouldDealWithDirectoryNameAsExistingFile() throws SQLException, IOException {
+	public void shouldDealWithDirectoryNameAsExistingFile() throws IOException {
 		File dbDir = cleanDbDirectory("subdir");
-        /*try (FileOutputStream ignored = new FileOutputStream(dbDir)) {
-        }*/
 		File dbFile = new File(dbDir, "dbfile.db");
-		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath();
 		try (Connection ignored = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
 			Assert.assertTrue(dbFile.exists());
 			Assert.assertTrue(dbFile.isFile());
@@ -103,35 +102,42 @@ public class ASQLConnectorConnectionTest {
 		dbSubdir.delete();
 		Assert.assertFalse(dbSubdir.exists());
 
-		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath();
 		new ASQLConnectorDriver().connect(jdbcUrl, new Properties()).close();
 		Assert.assertTrue(dbFile.exists());
 	}
 
 	@Test
+	@SuppressWarnings("PMD.CloseResource")
 	public void shouldSupportReconnectAfterAbortedTransaction() throws SQLException, IOException {
 		File dbFile = cleanDbFile("aborted-transaction.db");
-		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath();
 
-		Connection conn;
-		try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
-			Assert.assertTrue(dbFile.exists());
-			Assert.assertFalse(connection.isClosed());
-			conn = connection;
-			connection.setAutoCommit(false);
-			Assert.assertFalse(connection.isClosed());
+		{
+			Connection conn;
+			try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
+				Assert.assertTrue(dbFile.exists());
+				Assert.assertFalse(connection.isClosed());
+				conn = connection;
+				connection.setAutoCommit(false);
+				Assert.assertFalse(connection.isClosed());
+			}
+			Assert.assertTrue(conn.isClosed());
 		}
-		Assert.assertTrue(conn.isClosed());
-		conn = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
-		Assert.assertFalse(conn.isClosed());
-		conn.close();
-		Assert.assertTrue(conn.isClosed());
+		{
+			Connection conn;
+			try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
+				Assert.assertFalse(connection.isClosed());
+				conn = connection;
+			}
+			Assert.assertTrue(conn.isClosed());
+		}
 	}
 
 	@Test
 	public void shouldAllowNewTransactionAfterCommit() throws SQLException, IOException {
 		File dbFile = cleanDbFile("transaction.db");
-		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
+		final String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath();
 		try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
 			connection.setAutoCommit(false);
 			connection.commit();
@@ -147,12 +153,13 @@ public class ASQLConnectorConnectionTest {
 	@Test
 	public void shouldAllowMultipleConnections() throws SQLException, IOException {
 		File dbFile = cleanDbFile("multiconnect.db");
-		final String jdbcUrl = "jdbc:asqlconnector:" + dbFile.getAbsolutePath();
-		Connection connection1 = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
-		Connection connection2 = new ASQLConnectorDriver().connect(jdbcUrl, new Properties());
-		connection1.close();
-		connection2.createStatement().executeQuery("select 1");
-		connection2.close();
+		final String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath();
+		try(Connection ignored = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
+			try(Connection connection2 = new ASQLConnectorDriver().connect(jdbcUrl, new Properties()))
+			{
+				connection2.createStatement().executeQuery("select 1");
+			}
+		}
 	}
 
 	private File cleanDbDirectory(String dirName) throws IOException {

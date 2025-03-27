@@ -1,12 +1,14 @@
 package fr.distrimind.oss.asqlconnector;
 
 import android.database.Cursor;
+import fr.distrimind.oss.flexilogxml.common.FlexiLogXML;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
@@ -15,11 +17,22 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map;
 
+
 public class ASQLConnectorResultSet implements ResultSet {
+	public static final String UPDATE_ASCII_STREAM_NOT_SUPPORTED = "updateAsciiStream not supported";
 	private static final String DATE_PATTERN = "yyyy-MM-dd";
 
 	private static final String TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
 	private static final String TIMESTAMP_PATTERN_NO_MILLIS = "yyyy-MM-dd HH:mm:ss";
+	public static final String SPACE_PIPE_SPACE = " | ";
+	public static final String UPDATE_BIG_DECIMAL_NOT_SUPPORTED = "updateBigDecimal not supported";
+	public static final String UPDATE_BINARY_STREAM_NOT_SUPPORTED = "updateBinaryStream not supported";
+	public static final String UPDATE_CHARACTER_STREAM_NOT_SUPPORTED = "updateCharacterStream not supported";
+	public static final String UPDATE_OBJECT_NOT_SUPPORTED = "updateObject not supported";
+	public static final String UPDATE_N_CHARACTER_STREAM_NOT_SUPPORTED = "updateNCharacterStream not supported";
+	public static final String UPDATE_BLOB_NOT_SUPPORTED = "updateBlob not supported";
+	public static final String UPDATE_CLOB_NOT_SUPPORTED = "updateClob not supported";
+	public static final String UPDATE_N_CLOB_NOT_SUPPORTED = "updateNClob not supported";
 
 	public static boolean dump = false;
 
@@ -35,27 +48,27 @@ public class ASQLConnectorResultSet implements ResultSet {
 			dumpResultSet();
 		}
 	}
-
+	@SuppressWarnings("PMD.CloseResource")
 	private void dumpResultSet() throws SQLException {
 		ResultSet rs = this;
 		boolean headerDrawn = false;
 		while (rs.next()) {
 			if (!headerDrawn) {
 				for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-					System.out.print(" | ");
-					System.out.print(rs.getMetaData().getColumnLabel(i));
+					Log.info(SPACE_PIPE_SPACE);
+					Log.info(rs.getMetaData().getColumnLabel(i));
 				}
-				System.out.println(" | ");
+				Log.info(SPACE_PIPE_SPACE);
 				headerDrawn = true;
 			}
 			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-				System.out.print(" | ");
-				System.out.print(rs.getString(i));
+				Log.info(SPACE_PIPE_SPACE);
+				Log.info(rs.getString(i));
 				if (rs.getString(i) != null) {
-					System.out.print(" (" + rs.getString(i).length() + ")");
+					Log.info(" (" + rs.getString(i).length() + ")");
 				}
 			}
-			System.out.println(" | ");
+			Log.info(SPACE_PIPE_SPACE);
 		}
 		rs.beforeFirst();
 	}
@@ -103,7 +116,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public void clearWarnings() throws SQLException {
+	public void clearWarnings() {
 		// TODO: Evaluate if implementation is sufficient (if so, delete comment and log)
 		Log.error(() -> " ********************* not implemented @ " + DebugPrinter.getFileName() + " line " + DebugPrinter.getLineNumber());
 	}
@@ -178,11 +191,13 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
+	@Deprecated
 	public BigDecimal getBigDecimal(int colID, int scale) throws SQLException {
-		return getBigDecimal(colID).setScale(scale);
+		return getBigDecimal(colID).setScale(scale, RoundingMode.CEILING);
 	}
 
 	@Override
+	@Deprecated
 	public BigDecimal getBigDecimal(String columnName, int scale)
 			throws SQLException {
 		return getBigDecimal(findColumn(columnName), scale);
@@ -307,7 +322,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public int getConcurrency() throws SQLException {
+	public int getConcurrency() {
 		return ResultSet.CONCUR_READ_ONLY;
 	}
 
@@ -333,7 +348,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 				default:
 					// format 2011-07-11 11:36:30.009
 					try {
-						SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
+						SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN, FlexiLogXML.getLocale());
 						java.util.Date parsedDate = dateFormat.parse(getStringImpl(index));
 						date = new Date(parsedDate.getTime());
 					} catch (Exception e) {
@@ -383,7 +398,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public int getFetchDirection() throws SQLException {
+	public int getFetchDirection() {
 		return ResultSet.FETCH_FORWARD;
 	}
 
@@ -395,12 +410,12 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public int getFetchSize() throws SQLException {
+	public int getFetchSize() {
 		return limitRows;
 	}
 
 	@Override
-	public void setFetchSize(int rows) throws SQLException {
+	public void setFetchSize(int rows) {
 		// TODO: Implement as max row number for next()
 		if (rows != 0) {
 			throw new UnsupportedOperationException("Not implemented yet");
@@ -457,7 +472,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public ResultSetMetaData getMetaData() throws SQLException {
+	public ResultSetMetaData getMetaData() {
 		return new ASQLConnectorResultSetMetaData(c);
 	}
 
@@ -529,14 +544,14 @@ public class ASQLConnectorResultSet implements ResultSet {
 			throws SQLException {
 		return getObject(findColumn(columnName), clazz);
 	}
-
+	@SuppressWarnings("PMD.MissingOverride")
 	public <T> T getObject(int columnIndex, Class<T> clazz) throws SQLException {
 		// This method is entitled to throw if the conversion is not supported, so,
 		// since we don't support any conversions we'll throw.
 		// The only problem with this is that we're required to support certain conversion as specified in the docs.
 		throw new SQLFeatureNotSupportedException("Conversion not supported.  No conversions are supported.  This method will always throw.");
 	}
-
+	@SuppressWarnings("PMD.MissingOverride")
 	public <T> T getObject(String columnName, Class<T> clazz) throws SQLException {
 		return getObject(findColumn(columnName), clazz);
 	}
@@ -578,7 +593,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public Statement getStatement() throws SQLException {
+	public Statement getStatement() {
 		// TODO: Implement as Xerial driver (which takes Statement as constructor argument)
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
@@ -639,8 +654,8 @@ public class ASQLConnectorResultSet implements ResultSet {
 					return new Timestamp(getLong(index));
 				default:
 					// format 2011-07-11 11:36:30.009 OR 2011-07-11 11:36:30
-					SimpleDateFormat timeStampFormat = new SimpleDateFormat(TIMESTAMP_PATTERN);
-					SimpleDateFormat timeStampFormatNoMillis = new SimpleDateFormat(TIMESTAMP_PATTERN_NO_MILLIS);
+					SimpleDateFormat timeStampFormat = new SimpleDateFormat(TIMESTAMP_PATTERN, FlexiLogXML.getLocale());
+					SimpleDateFormat timeStampFormatNoMillis = new SimpleDateFormat(TIMESTAMP_PATTERN_NO_MILLIS, FlexiLogXML.getLocale());
 					try {
 						return new Timestamp(timeStampFormat.parse(getStringImpl(index)).getTime());
 					} catch (ParseException e) {
@@ -677,7 +692,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public int getType() throws SQLException {
+	public int getType() {
 		return ResultSet.TYPE_SCROLL_SENSITIVE;
 	}
 
@@ -695,6 +710,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	 * @deprecated since JDBC 2.0, use getCharacterStream
 	 */
 	@Override
+	@Deprecated
 	public InputStream getUnicodeStream(int colID) throws SQLException {
 		throw new SQLFeatureNotSupportedException("ResultSet.getUnicodeStream deprecated, use getCharacterStream instead");
 	}
@@ -703,12 +719,13 @@ public class ASQLConnectorResultSet implements ResultSet {
 	 * @deprecated since JDBC 2.0, use getCharacterStream
 	 */
 	@Override
+	@Deprecated
 	public InputStream getUnicodeStream(String columnName) throws SQLException {
 		return getUnicodeStream(findColumn(columnName));
 	}
 
 	@Override
-	public SQLWarning getWarnings() throws SQLException {
+	public SQLWarning getWarnings() {
 		// TODO: It may be that this is better implemented as "return null"
 		throw new UnsupportedOperationException("ResultSet.getWarnings not implemented yet");
 	}
@@ -803,6 +820,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void refreshRow() throws SQLException {
 		try {
@@ -844,42 +862,42 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public void updateAsciiStream(int colID, InputStream x, int length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateAsciiStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_ASCII_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateAsciiStream(String columnName, InputStream x, int length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateAsciiStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_ASCII_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBigDecimal(int colID, BigDecimal x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBigDecimal not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BIG_DECIMAL_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBigDecimal(String columnName, BigDecimal x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBigDecimal not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BIG_DECIMAL_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBinaryStream(int colID, InputStream x, int length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBinaryStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BINARY_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBinaryStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BINARY_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBlob(int colID, Blob x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBlob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBlob(String columnName, Blob x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBlob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BLOB_NOT_SUPPORTED);
 	}
 
 	@Override
@@ -914,22 +932,22 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public void updateCharacterStream(int colID, Reader x, int length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateCharacterStream(String columnName, Reader reader, int length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateClob(int colID, Clob x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateClob(String columnName, Clob x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
@@ -994,22 +1012,22 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public void updateObject(int colID, Object x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateObject not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_OBJECT_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateObject(String columnName, Object x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateObject not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_OBJECT_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateObject(int colID, Object x, int scale) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateObject not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_OBJECT_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateObject(String columnName, Object x, int scale) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateObject not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_OBJECT_NOT_SUPPORTED);
 	}
 
 	@Override
@@ -1077,7 +1095,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+	public boolean isWrapperFor(Class<?> iface) {
 		return iface != null && iface.isAssignableFrom(getClass());
 	}
 
@@ -1091,7 +1109,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public int getHoldability() throws SQLException {
+	public int getHoldability() {
 		return CLOSE_CURSORS_AT_COMMIT;
 	}
 
@@ -1146,158 +1164,158 @@ public class ASQLConnectorResultSet implements ResultSet {
 	}
 
 	@Override
-	public boolean isClosed() throws SQLException {
+	public boolean isClosed() {
 		return c.isClosed();
 	}
 
 	@Override
 	public void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateAsciiStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_ASCII_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateAsciiStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_ASCII_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateAsciiStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_ASCII_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateAsciiStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_ASCII_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBinaryStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BINARY_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBinaryStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BINARY_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBinaryStream(int columnIndex, InputStream x, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBinaryStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BINARY_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBinaryStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BINARY_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBlob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBlob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBlob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateBlob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_BLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateClob(int columnIndex, Reader reader) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateClob(String columnLabel, Reader reader) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNCharacterStream(int columnIndex, Reader x) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNCharacterStream(String columnLabel, Reader reader) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNCharacterStream not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CHARACTER_STREAM_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNClob(String columnLabel, NClob nClob) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNClob(int columnIndex, Reader reader) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNClob(String columnLabel, Reader reader) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
 	public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException("updateNClob not supported");
+		throw new SQLFeatureNotSupportedException(UPDATE_N_CLOB_NOT_SUPPORTED);
 	}
 
 	@Override
@@ -1330,4 +1348,7 @@ public class ASQLConnectorResultSet implements ResultSet {
 		throw new SQLFeatureNotSupportedException("updateSQLXML not supported");
 	}
 
+	Cursor getCursor() {
+		return c;
+	}
 }

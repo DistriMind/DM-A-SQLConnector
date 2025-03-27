@@ -80,7 +80,7 @@ pmd {
 	consoleOutput = true
 	toolVersion = "7.11.0"
 	rulesMinimumPriority = 5
-	ruleSetFiles = files("../pmd/pmd-rules.xml")
+	ruleSetFiles = files("pmd/pmd-rules.xml")
 }
 
 
