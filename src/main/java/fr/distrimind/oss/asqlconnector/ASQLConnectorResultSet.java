@@ -182,7 +182,19 @@ public class ASQLConnectorResultSet implements ResultSet {
 
 	@Override
 	public BigDecimal getBigDecimal(int colID) throws SQLException {
-		return Utils.bigDecimalFromString(getStringImpl(colID));
+		Object o=getObject(colID);
+		if (o==null)
+			return null;
+		else if (o instanceof BigDecimal)
+			return (BigDecimal)o;
+		else if (o instanceof Long)
+			return BigDecimal.valueOf((long)o);
+		else if (o instanceof Double)
+			return BigDecimal.valueOf((double)o);
+		else if (o instanceof String)
+			return new BigDecimal((String)o);
+		else
+			throw new SQLException();
 	}
 
 	@Override
