@@ -36,7 +36,7 @@ DM-A-SQLConnector lets you access your app's database through JDBC. Android ship
        ...
    ```
 
-To know what is the last uploaded version, please refer to versions available here : [this repository](https://artifactory.distri-mind.fr/artifactory/DistriMind-Public/fr/distrimind/oss/util)
+To know what is the last uploaded version, please refer to versions available here : [this repository](https://artifactory.distri-mind.fr/artifactory/DistriMind-Public/fr/distrimind/oss/asqlconnector)
 ## Download with Maven :
 - Adapt into your pom.xml file, the next code (minimum Java version is 11) :
    ```
@@ -76,7 +76,7 @@ To know what is the last uploaded version, please refer to versions available he
        </repositories>
        ...		
    ```
-To know what last version has been uploaded, please refer to versions available into [this repository](https://artifactory.distri-mind.fr/artifactory/DistriMind-Public/fr/distrimind/oss/util)
+To know what last version has been uploaded, please refer to versions available into [this repository](https://artifactory.distri-mind.fr/artifactory/DistriMind-Public/fr/distrimind/oss/asqlconnector)
 
 ## Usage
 
