@@ -4,7 +4,7 @@
 
 DM-A-SQLConnector is a JDBC driver for Android's sqlite database (android.database.sqlite.SQLiteDatabase) originally conceived by Kristian Lein-Mathisen with the project name ASQLConnector. 
 
-DM-A-SQLConnector lets you access your app's database through JDBC. Android ships with the necessary interfaces needed to use JDBC drivers, but it does not officially ship with a driver for its built-in SQLite database engine.  When porting code from other projects, you can conveniently replace the JDBC url to jdbc:sqlite to access an SQLite database on Android.
+DM-A-SQLConnector lets you access your app's database through JDBC. Android ships with the necessary interfaces needed to use JDBC drivers, but it does not officially ship with a driver for its built-in SQLite database engine.  When porting code from other projects, you can conveniently replace the JDBC url to jdbc:asqlconnector to access an SQLite database on Android.
 
 # How to use it ?
 
@@ -87,6 +87,7 @@ import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import fr.distrimind.oss.flexilogxml.common.ReflectionTools;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            DriverManager.registerDriver((Driver) Class.forName("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver").getConstructor().newInstance());
+            DriverManager.registerDriver((Driver) ReflectionTools.getClassLoader().loadClass("fr.distrimind.oss.asqlconnector.ASQLConnectorDriver").getConstructor().newInstance());
         } catch (Exception e) {
             throw new RuntimeException("Failed to register ASQLConnectorDriver");
         }
@@ -122,15 +123,7 @@ public class MainActivity extends AppCompatActivity {
 }
 ```
 
-You can find an example of how to use DM-A-SQLConnector with ActiveRecord on Ruboto here:
-
-https://github.com/ruboto/ruboto/wiki/Tutorial%3A-Using-an-SQLite-database-with-ActiveRecord
-
 ## Debug output
-
-You can set the DM-A-SQLConnector log output level like this
-
-    fr.distrimind.oss.asqlconnector.Log.LEVEL = android.util.Log.VERBOSE;
 
 You can turn on resultset dumps like this
 
