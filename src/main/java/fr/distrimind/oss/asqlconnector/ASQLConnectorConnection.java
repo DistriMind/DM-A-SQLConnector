@@ -25,6 +25,7 @@ public class ASQLConnectorConnection implements Connection {
 			new HashMap<>();
 	public static final String BACK_SLASH = " \"";
 	public static final String BACK_SLASH2 = "\" ";
+	public static final String PMD_MISSING_OVERRIDE = "PMD.MissingOverride";
 	/**
 	 * Will have the value 9 or greater the version of SQLException has the constructor:
 	 * SQLException(Throwable theCause) otherwise false.
@@ -539,18 +540,23 @@ public class ASQLConnectorConnection implements Connection {
 	}
 
 	// methods added for JDK7 compilation
+	@SuppressWarnings(PMD_MISSING_OVERRIDE)
 	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
 		throw new SQLFeatureNotSupportedException("setNetworkTimeout not supported");
 	}
+	@SuppressWarnings(PMD_MISSING_OVERRIDE)
 	public int getNetworkTimeout() throws SQLException {
 		throw new SQLFeatureNotSupportedException("getNetworkTimeout not supported");
 	}
+	@SuppressWarnings(PMD_MISSING_OVERRIDE)
 	public void abort(Executor executor) throws SQLException {
 		close();
 	}
+	@SuppressWarnings(PMD_MISSING_OVERRIDE)
 	public String getSchema() {
 		return null;
 	}
+	@SuppressWarnings(PMD_MISSING_OVERRIDE)
 	public void setSchema(String schema) {
 	}
 

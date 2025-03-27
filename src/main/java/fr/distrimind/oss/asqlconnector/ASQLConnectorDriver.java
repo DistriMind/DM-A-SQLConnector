@@ -90,7 +90,7 @@ public class ASQLConnectorDriver implements java.sql.Driver {
 	}
 
 	// methods added for JDK7 compilation
-
+	@SuppressWarnings("PMD.MissingOverride")
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
 		throw new SQLFeatureNotSupportedException("getParentLogger not supported");
 	}
