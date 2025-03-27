@@ -16,6 +16,8 @@ DM-A-SQLConnector lets you access your app's database through JDBC. Android ship
      dependencies {
          ...
          api(group:'fr.distrimind.oss.asqlconnector', name: 'DM-A-SQLConnector', version: '1.0.0-STABLE')
+         //optional : under Android 
+         implementation(group:'fr.distrimind.oss.flexilogxml.android', name: 'DM-FlexiLogXML-Android', version: '2.2.0-STABLE')
          ...
      }
      ...
@@ -48,6 +50,12 @@ To know what is the last uploaded version, please refer to versions available he
                    <artifactId>DM-A-SQLConnector</artifactId>
                    <version>1.0.0-STABLE</version>
                </dependency>  
+               <-- optional : under Android -->
+               <dependency>
+                   <groupId>fr.distrimind.oss.flexilogxml.android</groupId>
+                   <artifactId>DM-FlexiLogXML-Android</artifactId>
+                   <version>2.2.0-STABLE</version>
+               </dependency>
                ...
            </dependencies>
            ...
