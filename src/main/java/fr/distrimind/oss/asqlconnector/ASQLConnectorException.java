@@ -13,71 +13,74 @@ public class ASQLConnectorException extends java.sql.SQLException {
 	/**
 	 * The exception that this exception was created for.
 	 */
-	SQLException sqlException;
+	SQLException androidSqlLiteException;
 
 	/**
 	 * Create a hard java.sql.SQLException from the RuntimeException android.database.SQLException.
 	 */
 	public ASQLConnectorException(SQLException sqlException) {
-		this.sqlException = sqlException;
+		this.androidSqlLiteException = sqlException;
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof ASQLConnectorException)
-			return sqlException.equals(((ASQLConnectorException) o).sqlException);
+			return androidSqlLiteException.equals(((ASQLConnectorException) o).androidSqlLiteException);
 		else
 			return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(sqlException);
+		return Objects.hashCode(androidSqlLiteException);
 	}
 
 	@Override
 	public Throwable fillInStackTrace() {
-		return sqlException.fillInStackTrace();
+		return androidSqlLiteException.fillInStackTrace();
 	}
 
 	@Override
 	public Throwable getCause() {
-		return sqlException.getCause();
+		return androidSqlLiteException.getCause();
 	}
 
 	@Override
 	public String getLocalizedMessage() {
-		return sqlException.getLocalizedMessage();
+		return androidSqlLiteException.getLocalizedMessage();
 	}
 
 	@Override
 	public String getMessage() {
-		return sqlException.getMessage();
+		return androidSqlLiteException.getMessage();
 	}
 
 	@Override
 	public StackTraceElement[] getStackTrace() {
-		return sqlException.getStackTrace();
+		return androidSqlLiteException.getStackTrace();
 	}
 
 	@Override
 	public void printStackTrace() {
-		Log.error(sqlException);
+		Log.error(androidSqlLiteException);
 	}
 
 	@Override
 	public void printStackTrace(PrintStream err) {
-		sqlException.printStackTrace(err);
+		androidSqlLiteException.printStackTrace(err);
 	}
 
 	@Override
 	public void printStackTrace(PrintWriter err) {
-		sqlException.printStackTrace(err);
+		androidSqlLiteException.printStackTrace(err);
 	}
 
 	@Override
 	public String toString() {
-		return sqlException.toString();
+		return androidSqlLiteException.toString();
 	}
 
+	public SQLException getAndroidSqlLiteException() {
+		return androidSqlLiteException;
+	}
 }
