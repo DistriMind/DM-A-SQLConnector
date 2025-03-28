@@ -32,7 +32,7 @@ if (propFile.canRead())
 }
 
 
-version='1.0.0-STABLE'
+version='1.0.1-STABLE'
 group='fr.distrimind.oss.asqlconnector'
 
 
@@ -101,6 +101,11 @@ jar {
             "COPYING-$projectName"
         }
     }
+    from('NOTICE') {
+        rename { fileName ->
+            "NOTICE-$projectName"
+        }
+    }
 }
 
 
@@ -117,6 +122,11 @@ tasks.register('sourcesJar', Jar) {
             "COPYING-$projectName"
         }
     }
+    from('NOTICE') {
+        rename { fileName ->
+            "NOTICE-$projectName"
+        }
+    }
 }
 
 tasks.register('javadocJar', Jar) {
@@ -130,6 +140,11 @@ tasks.register('javadocJar', Jar) {
     from('COPYING') {
         rename { fileName ->
             "COPYING-$projectName"
+        }
+    }
+    from('NOTICE') {
+        rename { fileName ->
+            "NOTICE-$projectName"
         }
     }
 }
