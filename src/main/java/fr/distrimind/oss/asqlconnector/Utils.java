@@ -27,6 +27,8 @@ class Utils {
 		if (s == null)
 			return null;
 		else {
+			if (s.isEmpty())
+				throw new SQLException();
 			if (s.charAt(0)!=ASLConnectorStringType.BYTE_ARRAY_TYPE)
 				throw new SQLException();
 			return Base64.getDecoder().decode(s.substring(1));
@@ -44,6 +46,8 @@ class Utils {
 		if (s == null)
 			return null;
 		else {
+			if (s.isEmpty())
+				return s;
 			if (s.charAt(0)!=ASLConnectorStringType.STRING_TYPE)
 				return s;
 			return s.substring(1);
@@ -64,12 +68,12 @@ class Utils {
 		}
 	}
 
-	static BigDecimal bigDecimalFromString(String s) {
+	static BigDecimal bigDecimalFromString(String s) throws SQLException {
 		if (s == null || s.length()<2)
 			return null;
 		else {
 			if (s.charAt(0) != ASLConnectorStringType.BIG_DECIMAL_TYPE)
-				throw new IllegalArgumentException();
+				throw new SQLException();
 			byte[] tab=Base64.getDecoder().decode(s.substring(1));
 			byte[] t = new byte[tab.length - 4];
 			System.arraycopy(tab, 4, t, 0, t.length);
