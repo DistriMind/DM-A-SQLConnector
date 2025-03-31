@@ -10,10 +10,10 @@ import java.util.Base64;
  * @since DM-A-SQLConnector 1.0
  * @version 1.O
  */
-class Utils {
+public class Utils {
 
 
-	static String getTypedBytesArray(byte[] t) {
+	public static String getTypedBytesArray(byte[] t) {
 		if (t == null)
 			return null;
 		else {
@@ -23,7 +23,7 @@ class Utils {
 	}
 
 	@SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-	static byte[] getUntypedBytesArray(String s) throws SQLException {
+	public static byte[] getUntypedBytesArray(String s) throws SQLException {
 		if (s == null)
 			return null;
 		else {
@@ -34,7 +34,7 @@ class Utils {
 			return Base64.getDecoder().decode(s.substring(1));
 		}
 	}
-	static String getTypedString(String s) {
+	public static String getTypedString(String s) {
 		if (s == null)
 			return null;
 		else {
@@ -42,7 +42,7 @@ class Utils {
 		}
 	}
 
-	static String getUntypedString(String s) {
+	public static String getUntypedString(String s) {
 		if (s == null)
 			return null;
 		else {
@@ -56,7 +56,7 @@ class Utils {
 
 
 	@SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-	static String bigDecimalToString(BigDecimal bigDecimal) {
+	public static String bigDecimalToString(BigDecimal bigDecimal) {
 		if (bigDecimal == null)
 			return null;
 		else {
@@ -68,7 +68,7 @@ class Utils {
 		}
 	}
 
-	static BigDecimal bigDecimalFromString(String s) throws SQLException {
+	public static BigDecimal bigDecimalFromString(String s) throws SQLException {
 		if (s == null || s.length()<2)
 			return null;
 		else {
