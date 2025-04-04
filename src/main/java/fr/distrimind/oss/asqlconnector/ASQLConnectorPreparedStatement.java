@@ -148,9 +148,11 @@ public class ASQLConnectorPreparedStatement implements PreparedStatement {
 			if (o==null)
 				t[i++]=null;
 			else if (o.getClass()==byte[].class)
-				t[i++] = Base64.getEncoder().encodeToString((byte[]) o);
+				throw new IllegalAccessError();
+			else if (o instanceof ASQLConnectorClob)
+				throw new IllegalAccessError();
 			else if (o instanceof ASQLConnectorBlob)
-				t[i++] = ((ASQLConnectorBlob) o).toBase64();
+				throw new SQLException();
 			else
 				t[i++]=o.toString();
 		}
