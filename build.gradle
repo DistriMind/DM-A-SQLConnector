@@ -32,7 +32,7 @@ if (propFile.canRead())
 }
 
 
-version='1.0.4-STABLE'
+version='1.0.5-STABLE'
 group='fr.distrimind.oss.asqlconnector'
 
 

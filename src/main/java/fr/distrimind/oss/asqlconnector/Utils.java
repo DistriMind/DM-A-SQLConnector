@@ -10,10 +10,10 @@ import java.util.Base64;
  * @since DM-A-SQLConnector 1.0
  * @version 1.O
  */
-public class Utils {
+class Utils {
 
 
-	public static String getTypedBytesArray(byte[] t) {
+	static String getTypedBytesArray(byte[] t) {
 		if (t == null)
 			return null;
 		else {
@@ -23,7 +23,7 @@ public class Utils {
 	}
 
 	@SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-	public static byte[] getUntypedBytesArray(String s) throws SQLException {
+	static byte[] getUntypedBytesArray(String s) throws SQLException {
 		if (s == null)
 			return null;
 		else {
@@ -34,7 +34,7 @@ public class Utils {
 			return Base64.getDecoder().decode(s.substring(1));
 		}
 	}
-	public static String getTypedString(String s) {
+	static String getTypedString(String s) {
 		if (s == null)
 			return null;
 		else {
@@ -42,7 +42,7 @@ public class Utils {
 		}
 	}
 
-	public static String getUntypedString(String s) {
+	static String getUntypedString(String s) {
 		if (s == null)
 			return null;
 		else {
@@ -56,7 +56,7 @@ public class Utils {
 
 
 	@SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-	public static String bigDecimalToString(BigDecimal bigDecimal) {
+	static String bigDecimalToString(BigDecimal bigDecimal) {
 		if (bigDecimal == null)
 			return null;
 		else {
@@ -68,7 +68,7 @@ public class Utils {
 		}
 	}
 
-	public static BigDecimal bigDecimalFromString(String s) throws SQLException {
+	static BigDecimal bigDecimalFromString(String s) throws SQLException {
 		if (s == null || s.length()<2)
 			return null;
 		else {
