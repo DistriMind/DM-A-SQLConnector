@@ -61,6 +61,8 @@ public class ASQLConnectorStatement implements Statement {
 		clearBatch();
 		clearWarnings();
 		closeResultSet();
+		if (aSQLConnectorConnection.getDb().inTransaction())
+			aSQLConnectorConnection.endAutoTransactionIfNecessary(false);
 		aSQLConnectorConnection = null;
 		db = null;
 	}
@@ -94,17 +96,25 @@ public class ASQLConnectorStatement implements Statement {
 		if (rs != null && !rs.isClosed()) {
 			rs.close();
 		}
-		if (isSelect) {
-			String limitedSql = sql + (maxRows != null ? " LIMIT " + maxRows : "");
-			rs = new ASQLConnectorResultSet(db.rawQuery(limitedSql, new String[0]));
-			if (rs.getCursor().getCount() == 0)
-				return false;
-		} else {
-			db.execSQL(sql);
-			rs = null;
-			updateCount = aSQLConnectorConnection.changedRowsCount();
+		this.aSQLConnectorConnection.startAutoTransactionIfNecessary();
+		try {
+			if (isSelect) {
+				String limitedSql = sql + (maxRows != null ? " LIMIT " + maxRows : "");
+				rs = new ASQLConnectorResultSet(db.rawQuery(limitedSql, new String[0]));
+				if (rs.getCursor().getCount() == 0)
+					return false;
+			} else {
+				db.execSQL(sql);
+				rs = null;
+				updateCount = aSQLConnectorConnection.changedRowsCount();
+			}
 		}
-
+		catch (SQLException e)
+		{
+			this.aSQLConnectorConnection.endAutoTransactionIfNecessary(false);
+			throw e;
+		}
+		this.aSQLConnectorConnection.endAutoTransactionIfNecessary(true);
 		return (rs != null);
 	}
 
@@ -128,7 +138,17 @@ public class ASQLConnectorStatement implements Statement {
 	public int[] executeBatch() throws SQLException {
 		int[] results = new int[1];
 		results[0] = EXECUTE_FAILED;
-		db.execSQL(sqlBatch.toString());
+		this.aSQLConnectorConnection.startAutoTransactionIfNecessary();
+		try {
+			db.execSQL(sqlBatch.toString());
+		}
+		catch (SQLException e)
+		{
+			this.aSQLConnectorConnection.endAutoTransactionIfNecessary(false);
+			throw e;
+		}
+		this.aSQLConnectorConnection.endAutoTransactionIfNecessary(true);
+
 		results[0] = aSQLConnectorConnection.changedRowsCount();
 		updateCount = results[0];
 		return results;
@@ -137,14 +157,33 @@ public class ASQLConnectorStatement implements Statement {
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException {
 		closeResultSet();
-		return rs = new ASQLConnectorResultSet(db.rawQuery(sql, null));
+		this.aSQLConnectorConnection.startAutoTransactionIfNecessary();
+		try {
+			rs = new ASQLConnectorResultSet(db.rawQuery(sql, null));
+		}
+		catch (SQLException e)
+		{
+			this.aSQLConnectorConnection.endAutoTransactionIfNecessary(false);
+			throw e;
+		}
+		this.aSQLConnectorConnection.endAutoTransactionIfNecessary(true);
+		return rs;
 	}
 
 	@Override
 	public int executeUpdate(String sql) throws SQLException {
 		closeResultSet();
-		db.execSQL(sql);
-		updateCount = aSQLConnectorConnection.changedRowsCount();
+		this.aSQLConnectorConnection.startAutoTransactionIfNecessary();
+		try {
+			db.execSQL(sql);
+			updateCount = aSQLConnectorConnection.changedRowsCount();
+		}
+		catch (SQLException e)
+		{
+			this.aSQLConnectorConnection.endAutoTransactionIfNecessary(false);
+			throw e;
+		}
+		this.aSQLConnectorConnection.endAutoTransactionIfNecessary(true);
 		return updateCount;
 	}
 

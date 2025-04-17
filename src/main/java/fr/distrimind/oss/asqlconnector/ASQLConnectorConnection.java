@@ -227,12 +227,30 @@ public class ASQLConnectorConnection implements Connection {
 		if (autoCommit) {
 			throw new SQLException("database in auto-commit mode");
 		}
-		sqlitedb.setTransactionSuccessful();
-		Log.debug(() -> "END TRANSACTION  (commit) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
-		sqlitedb.endTransaction();
+
+		endTransaction(true);
+	}
+	void startAutoTransactionIfNecessary() throws SQLException {
+		if (autoCommit)
+			startTransaction();
+	}
+
+	void endAutoTransactionIfNecessary(boolean success) throws SQLException {
+		if (autoCommit)
+			endTransaction(success);
+	}
+	private void startTransaction() throws SQLException {
 		Log.debug(() -> "BEGIN TRANSACTION (after commit) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
 		sqlitedb.beginTransaction();
 	}
+
+	private void endTransaction(boolean success) throws SQLException {
+		if (success)
+			sqlitedb.setTransactionSuccessful();
+		Log.debug(() -> "END TRANSACTION  (commit) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
+		sqlitedb.endTransaction();
+	}
+
 
 	@Override
 	public ASQLConnectorStatement createStatement() {
@@ -271,13 +289,8 @@ public class ASQLConnectorConnection implements Connection {
 		this.autoCommit = autoCommit;
 		if (autoCommit) {
 			if (sqlitedb.inTransaction()) { // to be on safe side.
-				sqlitedb.setTransactionSuccessful();
-				Log.debug(() -> "END TRANSACTION (autocommit on) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
-				sqlitedb.endTransaction();
+				endTransaction(true);
 			}
-		} else {
-			Log.debug(() -> "BEGIN TRANSACTION (autocommit off) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
-			sqlitedb.beginTransaction();
 		}
 	}
 
@@ -316,11 +329,14 @@ public class ASQLConnectorConnection implements Connection {
 
 	@Override
 	public void setTransactionIsolation(int level) throws SQLException {
+		if (this.sqlitedb.inTransaction())
+			throw new SQLException("The database is already in transaction");
 		// TODO: Xerial implements this with PRAGMA read_uncommitted
 		if (level != TRANSACTION_SERIALIZABLE) {
 			throw new SQLException("DM-A-SQLConnector supports only TRANSACTION_SERIALIZABLE.");
 		}
 		transactionIsolation = level;
+		startTransaction();
 	}
 
 	@Override
@@ -435,10 +451,7 @@ public class ASQLConnectorConnection implements Connection {
 		if (autoCommit) {
 			throw new SQLException("database in auto-commit mode");
 		}
-		Log.debug(() -> "END TRANSACTION (rollback) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
-		sqlitedb.endTransaction();
-		Log.debug(() -> "BEGIN TRANSACTION (after rollback) " + Thread.currentThread().getId() + BACK_SLASH + Thread.currentThread().getName() + BACK_SLASH2 + this);
-		sqlitedb.beginTransaction();
+		endTransaction(false);
 	}
 
 	@Override

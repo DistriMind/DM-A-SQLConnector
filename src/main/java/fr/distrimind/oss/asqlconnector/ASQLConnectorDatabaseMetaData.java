@@ -224,76 +224,86 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				null, null, null, null, ""};
 
 		ASQLConnectorDatabase db = con.getDb();
-		final String[] types = new String[]{TABLE_TYPE, VIEW_TYPE};
-		ResultSet rs = null;
-		List<Cursor> cursorList = new ArrayList<>();
-		try {
-			rs = getTables(catalog, schemaPattern, tableNamePattern, types);
-			while (rs.next()) {
-				String tableName = rs.getString(3);
-				String pragmaStatement = "PRAGMA table_info('" + tableName + "')";   // ?)";  substitutions don't seem to work in a pragma statment...
-				try (Cursor c=db.rawQuery(pragmaStatement, new String[]{})){
-					MatrixCursor mc = new MatrixCursor(columnNames, c.getCount());
-					while (c.moveToNext()) {
-						Object[] column = columnValues.clone();
-						column[2] = tableName;
-						column[3] = c.getString(1);
-						String type = c.getString(2);
-						column[5] = type;
-						type = type.toUpperCase(FlexiLogXML.getLocale());
-						// types are (as far as I can tell, the pragma document is not specific):
-						if ("TEXT".equals(type) || type.startsWith("CHAR")) {
-							column[4] = java.sql.Types.VARCHAR;
-						} else if ("NUMERIC".equals(type)) {
-							column[4] = java.sql.Types.NUMERIC;
-						} else if (type.startsWith("INT")) {
-							column[4] = java.sql.Types.INTEGER;
-						} else if ("REAL".equals(type)) {
-							column[4] = java.sql.Types.REAL;
-						} else if ("BLOB".equals(type)) {
-							column[4] = java.sql.Types.BLOB;
-						} else {  // manufactured columns, eg select 100 as something from tablename, may not have a type.
-							column[4] = java.sql.Types.NULL;
-						}
-						int nullable = c.getInt(3);
-						//public static final int columnNoNulls   0
-						//public static final int columnNullable  1
-						//public static final int columnNullableUnknown   2
-						if (nullable == 0) {
-							column[10] = 1;
-						} else if (nullable == 1) {
-							column[10] = 0;
-						}
-						column[12] = c.getString(4);  // we should check the type for this, but I'm not going to.
-						mc.addRow(column);
-					}
-					cursorList.add(mc);
-				} catch (SQLException ignored) {
-					// failure of one query will no affect the others...
-					// this will already have been printed.  e.printStackTrace();
-				}
-			}
-		} finally {
-			if (rs != null) {
-				try {
-					rs.close();
-				} catch (Exception e) {
-					Log.error(() -> "Impossible to close result set", e);
-				}
-			}
-		}
-
 		ASQLConnectorResultSet resultSet;
-		Cursor[] cursors = new Cursor[cursorList.size()];
-		cursors = cursorList.toArray(cursors);
+		this.con.startAutoTransactionIfNecessary();
+		try {
+			final String[] types = new String[]{TABLE_TYPE, VIEW_TYPE};
+			ResultSet rs = null;
+			List<Cursor> cursorList = new ArrayList<>();
+			try {
+				rs = getTables(catalog, schemaPattern, tableNamePattern, types);
+				while (rs.next()) {
+					String tableName = rs.getString(3);
+					String pragmaStatement = "PRAGMA table_info('" + tableName + "')";   // ?)";  substitutions don't seem to work in a pragma statment...
+					try (Cursor c = db.rawQuery(pragmaStatement, new String[]{})) {
+						MatrixCursor mc = new MatrixCursor(columnNames, c.getCount());
+						while (c.moveToNext()) {
+							Object[] column = columnValues.clone();
+							column[2] = tableName;
+							column[3] = c.getString(1);
+							String type = c.getString(2);
+							column[5] = type;
+							type = type.toUpperCase(FlexiLogXML.getLocale());
+							// types are (as far as I can tell, the pragma document is not specific):
+							if ("TEXT".equals(type) || type.startsWith("CHAR")) {
+								column[4] = java.sql.Types.VARCHAR;
+							} else if ("NUMERIC".equals(type)) {
+								column[4] = java.sql.Types.NUMERIC;
+							} else if (type.startsWith("INT")) {
+								column[4] = java.sql.Types.INTEGER;
+							} else if ("REAL".equals(type)) {
+								column[4] = java.sql.Types.REAL;
+							} else if ("BLOB".equals(type)) {
+								column[4] = java.sql.Types.BLOB;
+							} else {  // manufactured columns, eg select 100 as something from tablename, may not have a type.
+								column[4] = java.sql.Types.NULL;
+							}
+							int nullable = c.getInt(3);
+							//public static final int columnNoNulls   0
+							//public static final int columnNullable  1
+							//public static final int columnNullableUnknown   2
+							if (nullable == 0) {
+								column[10] = 1;
+							} else if (nullable == 1) {
+								column[10] = 0;
+							}
+							column[12] = c.getString(4);  // we should check the type for this, but I'm not going to.
+							mc.addRow(column);
+						}
+						cursorList.add(mc);
+					} catch (SQLException ignored) {
+						// failure of one query will no affect the others...
+						// this will already have been printed.  e.printStackTrace();
+					}
+				}
+			} finally {
+				if (rs != null) {
+					try {
+						rs.close();
+					} catch (Exception e) {
+						Log.error(() -> "Impossible to close result set", e);
+					}
+				}
+			}
 
-		if (cursors.length == 0) {
-			resultSet = new ASQLConnectorResultSet(new MatrixCursor(columnNames, 0));
-		} else if (cursors.length == 1) {
-			resultSet = new ASQLConnectorResultSet(cursors[0]);
-		} else {
-			resultSet = new ASQLConnectorResultSet(new MergeCursor(cursors));
+
+			Cursor[] cursors = new Cursor[cursorList.size()];
+			cursors = cursorList.toArray(cursors);
+
+			if (cursors.length == 0) {
+				resultSet = new ASQLConnectorResultSet(new MatrixCursor(columnNames, 0));
+			} else if (cursors.length == 1) {
+				resultSet = new ASQLConnectorResultSet(cursors[0]);
+			} else {
+				resultSet = new ASQLConnectorResultSet(new MergeCursor(cursors));
+			}
 		}
+		catch (SQLException e)
+		{
+			this.con.endAutoTransactionIfNecessary(false);
+			throw e;
+		}
+		this.con.endAutoTransactionIfNecessary(true);
 		return resultSet;
 	}
 
@@ -764,9 +774,9 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 		final String[] columnNames = new String[]{"TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "COLUMN_NAME", "KEY_SEQ", "PK_NAME"};
 		final Object[] columnValues = new Object[]{null, null, null, null, null, null};
 		ASQLConnectorDatabase db = con.getDb();
-
-		try(Cursor c = db.rawQuery("pragma table_info('" + table + "')", new String[]{})) {
-			MatrixCursor mc = new MatrixCursor(columnNames);
+		this.con.startAutoTransactionIfNecessary();
+		ASQLConnectorResultSet r;
+		try(Cursor c = db.rawQuery("pragma table_info('" + table + "')", new String[]{}); MatrixCursor mc = new MatrixCursor(columnNames)) {
 			while (c.moveToNext()) {
 				if (c.getInt(5) > 0) {
 					Object[] column = columnValues.clone();
@@ -776,9 +786,16 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				}
 			}
 			// The matrix cursor should be sorted by column name, but isn't
-			return new ASQLConnectorResultSet(mc);
+			r=new ASQLConnectorResultSet(mc);
 		}
+		catch (SQLException e)
+		{
+			this.con.endAutoTransactionIfNecessary(false);
+			throw e;
+		}
+		this.con.endAutoTransactionIfNecessary(true);
 
+		return r;
 	}
 
 	@Override
@@ -931,29 +948,39 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				" FROM sqlite_temp_master WHERE tbl_name LIKE ? AND name NOT LIKE 'android_metadata' AND upper(type) = ? ORDER BY 3";
 
 		ASQLConnectorDatabase db = con.getDb();
-		List<Cursor> cursorList = new ArrayList<>();
-		for (String tableType : types) {
-			String selectString = selectStringStart +
-					tableType +
-					selectStringMiddle +
-					tableType +
-					selectStringEnd;
-			Cursor c = db.rawQuery(selectString, new String[]{
-					tableNamePattern, tableType.toUpperCase(FlexiLogXML.getLocale()),
-					tableNamePattern, tableType.toUpperCase(FlexiLogXML.getLocale())});
-			cursorList.add(c);
-		}
+		this.con.startAutoTransactionIfNecessary();
 		ASQLConnectorResultSet resultSet;
-		Cursor[] cursors = new Cursor[cursorList.size()];
-		cursors = cursorList.toArray(cursors);
+		try {
+			List<Cursor> cursorList = new ArrayList<>();
+			for (String tableType : types) {
+				String selectString = selectStringStart +
+						tableType +
+						selectStringMiddle +
+						tableType +
+						selectStringEnd;
+				Cursor c = db.rawQuery(selectString, new String[]{
+						tableNamePattern, tableType.toUpperCase(FlexiLogXML.getLocale()),
+						tableNamePattern, tableType.toUpperCase(FlexiLogXML.getLocale())});
+				cursorList.add(c);
+			}
 
-		if (cursors.length == 0) {
-			resultSet = null;  // is this a valid return?? I think this can only occur on a SQL exception
-		} else if (cursors.length == 1) {
-			resultSet = new ASQLConnectorResultSet(cursors[0]);
-		} else {
-			resultSet = new ASQLConnectorResultSet(new MergeCursor(cursors));
+			Cursor[] cursors = new Cursor[cursorList.size()];
+			cursors = cursorList.toArray(cursors);
+
+			if (cursors.length == 0) {
+				resultSet = null;  // is this a valid return?? I think this can only occur on a SQL exception
+			} else if (cursors.length == 1) {
+				resultSet = new ASQLConnectorResultSet(cursors[0]);
+			} else {
+				resultSet = new ASQLConnectorResultSet(new MergeCursor(cursors));
+			}
 		}
+		catch (SQLException e)
+		{
+			this.con.endAutoTransactionIfNecessary(false);
+			throw e;
+		}
+		this.con.endAutoTransactionIfNecessary(true);
 		return resultSet;
 	}
 
@@ -988,8 +1015,18 @@ public class ASQLConnectorDatabaseMetaData implements DatabaseMetaData {
 				+ "    select 'TEXT' as tn, " + Types.VARCHAR + AS_DT_UNION
 				+ "    select 'INTEGER' as tn, " + Types.INTEGER + " as dt"
 				+ ") order by TYPE_NAME";
-
-		return new ASQLConnectorResultSet(con.getDb().rawQuery(sql, new String[0]));
+		this.con.startAutoTransactionIfNecessary();
+		Cursor c;
+		try {
+			c = con.getDb().rawQuery(sql, new String[0]);
+		}
+		catch (SQLException e)
+		{
+			this.con.endAutoTransactionIfNecessary(false);
+			throw e;
+		}
+		this.con.endAutoTransactionIfNecessary(true);
+		return new ASQLConnectorResultSet(c);
 	}
 
 	@Override

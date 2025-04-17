@@ -140,6 +140,7 @@ public class ASQLConnectorConnectionTest {
 		final String jdbcUrl = JDBC_ASQLCONNECTOR + dbFile.getAbsolutePath();
 		try (Connection connection = new ASQLConnectorDriver().connect(jdbcUrl, new Properties())) {
 			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 			connection.commit();
 		}
 
@@ -147,6 +148,7 @@ public class ASQLConnectorConnectionTest {
 			// The following line should not throw an exception "database is
 			// locked"
 			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 		}
 	}
 
