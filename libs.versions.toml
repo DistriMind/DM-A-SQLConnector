@@ -1,7 +1,7 @@
 [versions]
 junitVersion = "4.13.2"
 androidStubVersion = "4.3.0.0"
-dmFlexiLogXML='2.2.0-STABLE'
+dmFlexiLogXML='2.2.5-STABLE'
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
